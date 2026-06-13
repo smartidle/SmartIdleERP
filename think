@@ -1,0 +1,11 @@
+#!/usr/bin/env php
+<?php
+namespace think;
+
+define('APP_PATH', __DIR__ . '/app/');
+
+// 加载自动加载
+require __DIR__ . '/vendor/autoload.php';
+
+// 运行应用
+\think\App::run()->console();
