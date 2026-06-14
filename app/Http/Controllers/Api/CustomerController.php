@@ -129,6 +129,42 @@ class CustomerController extends Controller
     }
 
     /**
+     * 获取客户收货地址列表
+     */
+    public function addresses($id)
+    {
+        $customer = Customer::findOrFail($id);
+        $addresses = $customer->addresses()->orderBy('is_default', 'desc')->get();
+        return $this->success($addresses);
+    }
+
+    /**
+     * 添加客户收货地址
+     */
+    public function addAddress(Request $request, $id)
+    {
+        $customer = Customer::findOrFail($id);
+
+        $request->validate([
+            'address' => 'required|string',
+            'contact_person' => 'nullable|string|max:128',
+            'phone' => 'nullable|string|max:32',
+            'is_default' => 'nullable|integer|in:0,1',
+        ]);
+
+        $data = $request->only(['address', 'contact_person', 'phone', 'is_default']);
+
+        // 如果设为默认，取消其他默认
+        if (($data['is_default'] ?? 0) == 1) {
+            $customer->addresses()->update(['is_default' => 0]);
+        }
+
+        $address = $customer->addresses()->create($data);
+
+        return $this->success($address, '添加成功', 201);
+    }
+
+    /**
      * 搜索客户
      */
     public function search(Request $request)

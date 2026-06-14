@@ -108,4 +108,53 @@ class DashboardController extends Controller
             'receivable_amount' => $receivableAmount,
         ]);
     }
+
+    /**
+     * 获取仪表盘小组件数据
+     */
+    public function widgets(Request $request, $type = null)
+    {
+        $type = $type ?: $request->route('type', 'overview');
+
+        switch ($type) {
+            case 'sales':
+                $data = [
+                    'today_count' => SalesOrder::whereDate('order_date', today())->count(),
+                    'today_amount' => SalesOrder::whereDate('order_date', today())->sum('total_amount'),
+                    'monthly_count' => SalesOrder::whereMonth('order_date', now()->month)
+                        ->whereYear('order_date', now()->year)->count(),
+                    'monthly_amount' => SalesOrder::whereMonth('order_date', now()->month)
+                        ->whereYear('order_date', now()->year)->sum('total_amount'),
+                    'pending_count' => SalesOrder::where('status', SalesOrder::STATUS_PENDING)->count(),
+                ];
+                break;
+            case 'purchase':
+                $data = [
+                    'today_count' => PurchaseOrder::whereDate('order_date', today())->count(),
+                    'pending_count' => PurchaseOrder::whereIn('status', [
+                        PurchaseOrder::STATUS_APPROVED,
+                        PurchaseOrder::STATUS_PARTIAL,
+                    ])->count(),
+                ];
+                break;
+            case 'inventory':
+                $data = [
+                    'total_sku' => Inventory::distinct('sku_id')->count('sku_id'),
+                    'total_value' => Inventory::selectRaw('SUM(quantity * cost_price) as total')
+                        ->first()->total ?? 0,
+                    'low_stock_count' => Inventory::whereHas('product', function ($query) {
+                        $query->whereColumn('min_stock', '>', 'inventories.quantity');
+                    })->count(),
+                ];
+                break;
+            default:
+                $data = [
+                    'today_sales' => SalesOrder::whereDate('order_date', today())->count(),
+                    'pending_orders' => SalesOrder::where('status', SalesOrder::STATUS_PENDING)->count(),
+                    'today_purchases' => PurchaseOrder::whereDate('order_date', today())->count(),
+                ];
+        }
+
+        return $this->success($data);
+    }
 }

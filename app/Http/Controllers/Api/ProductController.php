@@ -154,6 +154,78 @@ class ProductController extends Controller
     }
 
     /**
+     * 获取产品分类列表
+     */
+    public function categories(Request $request)
+    {
+        $query = ProductCategory::query();
+
+        if ($request->has('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->has('parent_id')) {
+            $query->where('parent_id', $request->input('parent_id'));
+        }
+
+        $categories = $query->orderBy('sort', 'asc')
+            ->orderBy('id', 'asc')
+            ->paginate($request->input('per_page', 50));
+
+        return $this->success($categories);
+    }
+
+    /**
+     * 创建产品分类
+     */
+    public function createCategory(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'nullable|string|max:64',
+            'parent_id' => 'nullable|integer',
+            'level' => 'nullable|integer',
+            'sort' => 'nullable|integer',
+            'status' => 'nullable|integer|in:0,1',
+        ]);
+
+        $category = ProductCategory::create($request->only([
+            'name', 'code', 'parent_id', 'level', 'sort', 'status',
+        ]));
+
+        return $this->success($category, '创建成功', 201);
+    }
+
+    /**
+     * 更新产品分类
+     */
+    public function updateCategory(Request $request, $id)
+    {
+        $category = ProductCategory::findOrFail($id);
+
+        $category->update($request->only([
+            'name', 'code', 'parent_id', 'level', 'sort', 'status',
+        ]));
+
+        return $this->success($category, '更新成功');
+    }
+
+    /**
+     * 删除产品分类
+     */
+    public function destroyCategory($id)
+    {
+        $category = ProductCategory::findOrFail($id);
+
+        if ($category->products()->exists()) {
+            return $this->error('该分类下有产品，无法删除');
+        }
+
+        $category->delete();
+        return $this->success(null, '删除成功');
+    }
+
+    /**
      * 全局 SKU 列表（SKU管理）
      */
     public function allSkus(Request $request)

@@ -64,11 +64,18 @@ Route::prefix('v1')->group(function () {
         // Dashboard
         Route::get('dashboard', [DashboardController::class, 'index']);
         Route::get('dashboard/stats', [DashboardController::class, 'stats']);
+        Route::get('dashboard/widgets/{type?}', [DashboardController::class, 'widgets']);
         
         // Products
         Route::apiResource('products', ProductController::class);
         Route::get('products/search', [ProductController::class, 'search']);
         Route::get('products/{id}/skus', [ProductController::class, 'skus']);
+
+        // Product Categories (产品分类)
+        Route::get('product-categories', [ProductController::class, 'categories']);
+        Route::post('product-categories', [ProductController::class, 'createCategory']);
+        Route::put('product-categories/{id}', [ProductController::class, 'updateCategory']);
+        Route::delete('product-categories/{id}', [ProductController::class, 'destroyCategory']);
 
         // SKU Management (Global)
         Route::get('skus', [ProductController::class, 'allSkus']);
@@ -120,6 +127,8 @@ Route::prefix('v1')->group(function () {
         // Customers
         Route::apiResource('customers', CustomerController::class);
         Route::get('customers/search', [CustomerController::class, 'search']);
+        Route::get('customers/{id}/addresses', [CustomerController::class, 'addresses']);
+        Route::post('customers/{id}/addresses', [CustomerController::class, 'addAddress']);
         
         // Suppliers
         Route::apiResource('suppliers', SupplierController::class);
