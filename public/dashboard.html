@@ -133,9 +133,11 @@
         <div class="sidebar">
             <div class="sidebar-item active" onclick="showModule('dashboard')">📊 Dashboard</div>
             <div class="sidebar-item" onclick="showModule('products')" data-perm="product.view">📦 Products</div>
+            <div class="sidebar-item" onclick="showModule('skus')" data-perm="product.view">🏷️ SKUs</div>
             <div class="sidebar-item" onclick="showModule('customers')" data-perm="customer.view">👥 Customers</div>
             <div class="sidebar-item" onclick="showModule('suppliers')" data-perm="supplier.view">🏭 Suppliers</div>
             <div class="sidebar-item" onclick="showModule('sales')" data-perm="sales_order.view">🛒 Sales Orders</div>
+            <div class="sidebar-item" onclick="showModule('quotations')" data-perm="sales_order.view">📋 Quotations</div>
             <div class="sidebar-item" onclick="showModule('purchase')" data-perm="purchase_order.view">📥 Purchase Orders</div>
             <div class="sidebar-item" onclick="showModule('inventory')" data-perm="inventory.view">📈 Inventory</div>
             <div class="sidebar-item" onclick="showModule('finance')" data-perm="finance.view">💰 Finance</div>
@@ -169,7 +171,7 @@
                 </div>
                 <div class="data-table">
                     <h3>📦 Recent Products</h3>
-                    <table><thead><tr><th>ID</th><th>Name</th><th>SKU</th><th>Cost</th><th>Price</th><th>Status</th></tr></thead><tbody id="productsTable"></tbody></table>
+                    <table><thead><tr><th>Image</th><th>Name</th><th>SKU</th><th>Cost</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead><tbody id="productsTable"></tbody></table>
                 </div>
                 <div class="data-table">
                     <h3>🛒 Recent Sales Orders</h3>
@@ -214,6 +216,37 @@
                     </div>
                     <table><thead><tr><th>ID</th><th>Name</th><th>SKU</th><th>Cost</th><th>Price</th><th>Unit</th><th>Status</th><th>Actions</th></tr></thead><tbody id="allProductsTable"></tbody></table>
                     <div class="pagination" id="products-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== SKU Management ===== -->
+            <div id="module-skus" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">🏷️ SKU Management</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <div class="search-box" style="flex:1;max-width:300px;">
+                            <span>🔍</span>
+                            <input type="text" id="sku-search" placeholder="Search SKU code or product name..." oninput="filterSkus()">
+                        </div>
+                        <select class="filter-select" id="sku-status-filter" onchange="filterSkus()">
+                            <option value="">All Status</option>
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
+                        </select>
+                        <span style="font-size:12px;color:#888;">Cost $:</span>
+                        <input type="number" id="sku-cost-from" placeholder="Min" onchange="filterSkus()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:70px;">
+                        <span style="font-size:12px;color:#888;">-</span>
+                        <input type="number" id="sku-cost-to" placeholder="Max" onchange="filterSkus()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:70px;">
+                        <span style="font-size:12px;color:#888;">Price $:</span>
+                        <input type="number" id="sku-price-from" placeholder="Min" onchange="filterSkus()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:70px;">
+                        <span style="font-size:12px;color:#888;">-</span>
+                        <input type="number" id="sku-price-to" placeholder="Max" onchange="filterSkus()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:70px;">
+                    </div>
+                    <table>
+                        <thead><tr><th>SKU Code</th><th>Product</th><th>Specs</th><th>Cost</th><th>Sale Price</th><th>Whole Price</th><th>Stock</th><th>Actions</th></tr></thead>
+                        <tbody id="skusTable"></tbody>
+                    </table>
+                    <div class="pagination" id="skus-pagination"></div>
                 </div>
             </div>
 
@@ -359,6 +392,39 @@
                     </div>
                     <table><thead><tr><th>Order No.</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="salesOrdersTable"></tbody></table>
                     <div class="pagination" id="sales-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== Sales Quotations ===== -->
+            <div id="module-quotations" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">📋 Sales Quotations</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <div class="search-box" style="flex:1;max-width:300px;">
+                            <span>🔍</span>
+                            <input type="text" id="qt-search" placeholder="Search quotation no..." oninput="filterQuotations()">
+                        </div>
+                        <select class="filter-select" id="qt-status-filter" onchange="filterQuotations()">
+                            <option value="">All Status</option>
+                            <option value="1">Draft</option>
+                            <option value="2">Sent</option>
+                            <option value="3">Accepted</option>
+                            <option value="4">Rejected</option>
+                            <option value="5">Converted</option>
+                        </select>
+                        <span style="font-size:12px;color:#888;">From:</span>
+                        <input type="date" id="qt-date-from" onchange="filterQuotations()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                        <span style="font-size:12px;color:#888;">To:</span>
+                        <input type="date" id="qt-date-to" onchange="filterQuotations()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                    </div>
+                    <div class="toolbar-right">
+                        <button class="btn btn-primary" onclick="openQuotationModal()">+ New Quotation</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Quotation No.</th><th>Customer</th><th>Amount</th><th>Final Amount</th><th>Date</th><th>Valid Until</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="quotationsTable"></tbody>
+                    </table>
+                    <div class="pagination" id="quotations-pagination"></div>
                 </div>
             </div>
 
@@ -1836,14 +1902,72 @@
             // Recent products (first 10)
             const rp = appData.products.slice(0, 10);
             document.getElementById('productsTable').innerHTML = rp.length ? rp.map(p =>
-                `<tr><td>${p.id}</td><td>${p.name||'-'}</td><td>${p.sku_prefix||'-'}</td><td>$${parseFloat(p.base_cost_price||0).toFixed(2)}</td><td>$${parseFloat(p.base_sale_price||0).toFixed(2)}</td><td><span class="badge badge-${p.status==1?'success':'danger'}">${p.status==1?'Active':'Inactive'}</span></td></tr>`
-            ).join('') : '<tr><td colspan="6" style="text-align:center;color:#999">No products</td></tr>';
+                `<tr>
+                    <td><img src="${p.image || '/images/product-placeholder.png'}" alt="${p.name}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid #eee;" onerror="this.src='/images/product-placeholder.png'"></td>
+                    <td><strong>${p.name||'-'}</strong></td>
+                    <td>${p.sku_prefix||'-'}</td>
+                    <td>$${parseFloat(p.base_cost_price||0).toFixed(2)}</td>
+                    <td>$${parseFloat(p.base_sale_price||0).toFixed(2)}</td>
+                    <td><span class="badge badge-${p.status==1?'success':'danger'}">${p.status==1?'Active':'Inactive'}</span></td>
+                    <td><button class="btn btn-sm" onclick="viewProductImages(${p.id})">🖼️ Images</button></td>
+                </tr>`
+            ).join('') : '<tr><td colspan="7" style="text-align:center;color:#999">No products</td></tr>';
 
             // Recent sales orders (first 10)
             const rs = appData.salesOrders.slice(0, 10);
             document.getElementById('ordersTable').innerHTML = rs.length ? rs.map(o =>
                 `<tr><td>${o.order_no||o.id}</td><td>${o.customer_id||'-'}</td><td>$${parseFloat(o.total_amount||0).toFixed(2)}</td><td><span class="badge badge-${getStatusClass(o.status)}">${getStatusText(o.status)}</span></td><td>${o.order_date?o.order_date.substring(0,10):'-'}</td></tr>`
             ).join('') : '<tr><td colspan="5" style="text-align:center;color:#999">No orders</td></tr>';
+        }
+
+        // ===== Product Image Gallery =====
+        async function viewProductImages(productId) {
+            const res = await api(`/api/v1/products/${productId}`);
+            if (!res.success) { alert('Failed to load product'); return; }
+            const p = res.data;
+            const images = p.images ? JSON.parse(p.images) : [];
+            const mainImg = p.image || '';
+            let html = `<div style="padding:20px;max-width:700px;">
+                <h3>${p.name}</h3>
+                <div style="display:grid;grid-template-columns:200px 1fr;gap:20px;margin-top:15px;">
+                    <div>
+                        <img src="${mainImg || '/images/product-placeholder.png'}" alt="Main" style="width:200px;height:200px;object-fit:cover;border-radius:8px;border:1px solid #ddd;" onerror="this.src='/images/product-placeholder.png'">
+                        <p style="color:#888;font-size:12px;margin-top:5px;">Main Image</p>
+                    </div>
+                    <div>
+                        <h4>Image Gallery</h4>
+                        ${images.length > 0 ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">` +
+                            images.map((img, i) => `<img src="${img}" alt="Image ${i+1}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;border:1px solid #eee;cursor:pointer;" onclick="window.open('${img}','_blank')">`).join('') + '</div>'
+                            : '<p style="color:#999">No additional images</p>'}
+                        <p style="margin-top:10px;"><b>Upload New:</b></p>
+                        <input type="url" id="new-product-image" placeholder="Image URL" class="form-control" style="width:100%">
+                        <button class="btn btn-primary btn-sm" style="margin-top:5px;" onclick="updateProductImage(${productId})">Update Image</button>
+                    </div>
+                </div>
+                <div style="margin-top:15px;">
+                    <p><b>Category:</b> ${p.category?.name || '-'}</p>
+                    <p><b>Brand:</b> ${p.brand || '-'}</p>
+                    <p><b>Cost Price:</b> $${p.base_cost_price}</p>
+                    <p><b>Sale Price:</b> $${p.base_sale_price}</p>
+                    <p><b>Wholesale Price:</b> $${p.base_wholesale_price}</p>
+                    <p><b>Description:</b> ${p.description || '-'}</p>
+                </div>
+            </div>`;
+            document.getElementById('modal-body').innerHTML = html;
+            document.getElementById('modal-title').textContent = 'Product Images';
+            document.getElementById('generic-modal').classList.remove('hidden');
+        }
+
+        async function updateProductImage(productId) {
+            const imageUrl = document.getElementById('new-product-image').value;
+            if (!imageUrl) { alert('Please enter an image URL'); return; }
+            const res = await api(`/api/v1/products/${productId}`, 'PUT', { image: imageUrl });
+            if (res.success) {
+                alert('Image updated');
+                viewProductImages(productId);
+            } else {
+                alert('Error: ' + res.message);
+            }
         }
 
         // ===== Settings =====
@@ -1919,6 +2043,8 @@
             if (m === 'returns') renderReturns();
             if (m === 'checks') renderChecks();
             if (m === 'invoices') renderInvoices();
+            if (m === 'quotations') renderQuotations();
+            if (m === 'skus') renderSkus();
         }
 
         // ===== Purchase Returns Module =====
@@ -2226,6 +2352,325 @@
             </div>`;
             document.getElementById('modal-body').innerHTML = html;
             document.getElementById('modal-title').textContent = 'Invoice Details';
+            document.getElementById('generic-modal').classList.remove('hidden');
+        }
+
+        // ===== SKU Management Module =====
+        let skusData = [];
+
+        async function renderSkus() {
+            const res = await api('/api/v1/skus?per_page=200');
+            skusData = res.data?.data || [];
+            filterSkus();
+        }
+
+        function filterSkus() {
+            const q = document.getElementById('sku-search').value.toLowerCase();
+            const status = document.getElementById('sku-status-filter').value;
+            const costFrom = document.getElementById('sku-cost-from').value;
+            const costTo = document.getElementById('sku-cost-to').value;
+            const priceFrom = document.getElementById('sku-price-from').value;
+            const priceTo = document.getElementById('sku-price-to').value;
+
+            const filtered = skusData.filter(s => {
+                const matchQ = !q || (s.sku_code || '').toLowerCase().includes(q) || (s.product?.name || '').toLowerCase().includes(q);
+                const matchS = !status || String(s.product?.status) === status;
+                const matchCF = !costFrom || parseFloat(s.cost_price || 0) >= parseFloat(costFrom);
+                const matchCT = !costTo || parseFloat(s.cost_price || 0) <= parseFloat(costTo);
+                const matchPF = !priceFrom || parseFloat(s.sale_price || 0) >= parseFloat(priceFrom);
+                const matchPT = !priceTo || parseFloat(s.sale_price || 0) <= parseFloat(priceTo);
+                return matchQ && matchS && matchCF && matchCT && matchPF && matchPT;
+            });
+            document.getElementById('skusTable').innerHTML = filtered.map(s => {
+                const statusClass = s.product?.status == 1 ? 'success' : 'danger';
+                const statusText = s.product?.status == 1 ? 'Active' : 'Inactive';
+                return `<tr>
+                    <td><strong>${s.sku_code || '-'}</strong></td>
+                    <td>${s.product?.name || '-'}</td>
+                    <td style="font-size:12px;color:#666;">${s.spec_values || '-'}</td>
+                    <td>$${parseFloat(s.cost_price||0).toFixed(2)}</td>
+                    <td style="color:#52c41a;font-weight:600;">$${parseFloat(s.sale_price||0).toFixed(2)}</td>
+                    <td>$${parseFloat(s.wholesale_price||0).toFixed(2)}</td>
+                    <td>${s.stock ?? '-'} ${s.product?.base_unit || ''}</td>
+                    <td>
+                        <button class="btn btn-sm" onclick="editSku(${s.id})">✏️ Edit</button>
+                        <button class="btn btn-sm" onclick="viewSkuPrices(${s.id})">💰 Prices</button>
+                    </td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="8" style="text-align:center;color:#999">No SKUs found</td></tr>';
+        }
+
+        async function editSku(skuId) {
+            const res = await api(`/api/v1/skus/${skuId}`, 'GET');
+            if (!res.success) { alert('SKU not found'); return; }
+            const s = res.data;
+            const p = s.product || {};
+            document.getElementById('modal-title').textContent = 'Edit SKU: ' + (s.sku_code || '');
+            document.getElementById('modal-body').innerHTML = `<div style="padding:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                    <div class="form-group"><label>SKU Code</label><input type="text" id="sku-code" class="form-control" value="${s.sku_code || ''}"></div>
+                    <div class="form-group"><label>Specs</label><input type="text" id="sku-specs" class="form-control" value="${s.spec_values || ''}"></div>
+                    <div class="form-group"><label>Cost Price</label><input type="number" id="sku-cost" class="form-control" value="${s.cost_price || 0}" step="0.01"></div>
+                    <div class="form-group"><label>Sale Price</label><input type="number" id="sku-sale" class="form-control" value="${s.sale_price || 0}" step="0.01"></div>
+                    <div class="form-group"><label>Wholesale Price</label><input type="number" id="sku-wholesale" class="form-control" value="${s.wholesale_price || 0}" step="0.01"></div>
+                    <div class="form-group"><label>Stock</label><input type="number" id="sku-stock" class="form-control" value="${s.stock || 0}"></div>
+                </div>
+                <p style="color:#888;font-size:12px;margin-top:10px;"><b>Product:</b> ${p.name || '-'} | <b>Brand:</b> ${p.brand || '-'} | <b>Unit:</b> ${p.base_unit || '-'}</p>
+                <button class="btn btn-primary" style="margin-top:15px;" onclick="saveSku(${skuId})">💾 Save Changes</button>
+            </div>`;
+            document.getElementById('generic-modal').classList.remove('hidden');
+        }
+
+        async function saveSku(skuId) {
+            const data = {
+                sku_code: document.getElementById('sku-code').value,
+                spec_values: document.getElementById('sku-specs').value,
+                cost_price: document.getElementById('sku-cost').value,
+                sale_price: document.getElementById('sku-sale').value,
+                wholesale_price: document.getElementById('sku-wholesale').value,
+                stock: document.getElementById('sku-stock').value,
+            };
+            const res = await api(`/api/v1/skus/${skuId}`, 'PUT', data);
+            if (res.success) {
+                alert('SKU updated');
+                document.getElementById('generic-modal').classList.add('hidden');
+                renderSkus();
+            } else {
+                alert('Error: ' + res.message);
+            }
+        }
+
+        async function viewSkuPrices(skuId) {
+            const res = await api(`/api/v1/skus/${skuId}`);
+            if (!res.success) { alert('SKU not found'); return; }
+            const s = res.data;
+            const prices = s.customer_prices || [];
+            document.getElementById('modal-title').textContent = 'Customer Prices: ' + (s.sku_code || '');
+            document.getElementById('modal-body').innerHTML = `<div style="padding:20px;">
+                <h4>${s.product?.name || '-'} | ${s.sku_code || '-'}</h4>
+                <p><b>Base Sale Price:</b> $${s.sale_price || 0} | <b>Wholesale:</b> $${s.wholesale_price || 0} | <b>Cost:</b> $${s.cost_price || 0}</p>
+                <h4 style="margin-top:15px;">Customer-Specific Prices:</h4>
+                ${prices.length > 0 ? `<table style="width:100%;font-size:13px;"><thead><tr><th>Customer</th><th>Level</th><th>Price</th><th>Discount %</th></tr></thead><tbody>` +
+                    prices.map(p => `<tr><td>${p.customer?.name || 'Cust#'+p.customer_id}</td><td>${p.customer?.level || '-'}</td><td>$${p.price}</td><td>${p.discount_rate}%</td></tr>`).join('') + '</tbody></table>'
+                    : '<p style="color:#999">No customer-specific prices</p>'}
+            </div>`;
+            document.getElementById('generic-modal').classList.remove('hidden');
+        }
+
+        // ===== Sales Quotations Module =====
+        let quotationsData = [];
+
+        async function renderQuotations() {
+            const res = await api('/api/v1/quotations?per_page=100');
+            quotationsData = res.data?.data || [];
+            filterQuotations();
+        }
+
+        function filterQuotations() {
+            const q = document.getElementById('qt-search').value.toLowerCase();
+            const status = document.getElementById('qt-status-filter').value;
+            const dateFrom = document.getElementById('qt-date-from').value;
+            const dateTo = document.getElementById('qt-date-to').value;
+            const filtered = quotationsData.filter(qt => {
+                const matchQ = !q || (qt.quotation_no || '').toLowerCase().includes(q);
+                const matchS = !status || String(qt.status) === status;
+                const d = qt.quotation_date || '';
+                const matchDF = !dateFrom || d >= dateFrom;
+                const matchDT = !dateTo || d <= dateTo;
+                return matchQ && matchS && matchDF && matchDT;
+            });
+            document.getElementById('quotationsTable').innerHTML = filtered.map(qt => {
+                const statusMap = {1:'📝 Draft',2:'📤 Sent',3:'✅ Accepted',4:'❌ Rejected',5:'🔄 Converted',6:'⏰ Expired'};
+                return `<tr>
+                    <td><strong>${qt.quotation_no || '-'}</strong></td>
+                    <td>${qt.customer?.name || (qt.customer_id ? 'Cust#'+qt.customer_id : '-')}</td>
+                    <td>$${parseFloat(qt.total_amount||0).toLocaleString()}</td>
+                    <td style="color:#52c41a;font-weight:600;">$${parseFloat(qt.final_amount||0).toLocaleString()}</td>
+                    <td>${qt.quotation_date || '-'}</td>
+                    <td>${qt.valid_until || '-'}</td>
+                    <td>${statusMap[qt.status] || '-'}</td>
+                    <td>
+                        ${qt.status === 1 ? `<button class="btn btn-sm btn-primary" onclick="sendQuotation(${qt.id})">📤 Send</button>` : ''}
+                        ${qt.status === 2 ? `<button class="btn btn-sm btn-success" onclick="acceptQuotation(${qt.id})">✅ Accept</button>
+                        <button class="btn btn-sm btn-danger" onclick="rejectQuotation(${qt.id})">❌ Reject</button>` : ''}
+                        ${(qt.status === 2 || qt.status === 3) ? `<button class="btn btn-sm btn-warning" onclick="convertQuotation(${qt.id})">🔄 To Order</button>` : ''}
+                        <button class="btn btn-sm" onclick="viewQuotation(${qt.id})">👁️ View</button>
+                    </td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="8" style="text-align:center;color:#999">No quotations</td></tr>';
+        }
+
+        function openQuotationModal() {
+            document.getElementById('modal-title').textContent = 'New Quotation';
+            document.getElementById('modal-body').innerHTML = `<div style="padding:20px;max-width:900px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                    <div class="form-group"><label>Customer</label><select id="qt-customer" class="form-control"></select></div>
+                    <div class="form-group"><label>Quotation Date</label><input type="date" id="qt-date" class="form-control" value="${new Date().toISOString().substring(0,10)}"></div>
+                    <div class="form-group"><label>Valid Until</label><input type="date" id="qt-valid" class="form-control"></div>
+                    <div class="form-group"><label>Tax Rate %</label><input type="number" id="qt-tax-rate" class="form-control" value="0" step="0.1"></div>
+                </div>
+                <div class="form-group"><label>Notes</label><textarea id="qt-notes" class="form-control"></textarea></div>
+                <h4>Line Items</h4>
+                <table style="width:100%;font-size:13px;" id="qt-items-table">
+                    <thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th><th></th></tr></thead>
+                    <tbody id="qt-items-body">
+                        <tr><td><input type="text" id="qt-pname-0" placeholder="Product name" class="form-control" style="width:150px"></td>
+                            <td><input type="number" id="qt-qty-0" value="1" min="0.001" step="0.001" class="form-control" style="width:80px" oninput="calcQtSubtotal(0)"></td>
+                            <td><input type="number" id="qt-price-0" value="0" step="0.01" class="form-control" style="width:100px" oninput="calcQtSubtotal(0)"></td>
+                            <td><span id="qt-sub-0">$0.00</span></td>
+                            <td><button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()">🗑</button></td></tr>
+                    </tbody>
+                </table>
+                <button class="btn btn-sm" onclick="addQtItem()">+ Add Item</button>
+                <div style="margin-top:15px;text-align:right;">
+                    <strong>Total: <span id="qt-total">$0.00</span></strong> |
+                    <strong>Tax: <span id="qt-tax">$0.00</span></strong> |
+                    <strong style="color:#52c41a;font-size:16px;">Final: <span id="qt-final">$0.00</span></strong>
+                </div>
+                <div style="margin-top:15px;text-align:right;">
+                    <button class="btn btn-primary" onclick="createQuotation()">Create Quotation</button>
+                </div>
+            </div>`;
+            document.getElementById('generic-modal').classList.remove('hidden');
+            // Load customers
+            (async () => {
+                const c = await api('/api/v1/customers?per_page=200');
+                const opts = (c.data?.data || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                document.getElementById('qt-customer').innerHTML = opts;
+            })();
+        }
+
+        let qtItemCount = 1;
+        function addQtItem() {
+            const tbody = document.getElementById('qt-items-body');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><input type="text" id="qt-pname-${qtItemCount}" placeholder="Product name" class="form-control" style="width:150px"></td>
+                <td><input type="number" id="qt-qty-${qtItemCount}" value="1" min="0.001" step="0.001" class="form-control" style="width:80px" oninput="calcQtSubtotal(${qtItemCount})"></td>
+                <td><input type="number" id="qt-price-${qtItemCount}" value="0" step="0.01" class="form-control" style="width:100px" oninput="calcQtSubtotal(${qtItemCount})"></td>
+                <td><span id="qt-sub-${qtItemCount}">$0.00</span></td>
+                <td><button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()">🗑</button></td>`;
+            tbody.appendChild(tr);
+            qtItemCount++;
+        }
+
+        function calcQtSubtotal(idx) {
+            const qty = parseFloat(document.getElementById('qt-qty-' + idx)?.value || 0);
+            const price = parseFloat(document.getElementById('qt-price-' + idx)?.value || 0);
+            const sub = qty * price;
+            const subEl = document.getElementById('qt-sub-' + idx);
+            if (subEl) subEl.textContent = '$' + sub.toFixed(2);
+            calcQtTotal();
+        }
+
+        function calcQtTotal() {
+            let total = 0;
+            document.querySelectorAll('[id^="qt-qty-"]').forEach(inp => {
+                const idx = inp.id.replace('qt-qty-', '');
+                const qty = parseFloat(inp.value || 0);
+                const price = parseFloat(document.getElementById('qt-price-' + idx)?.value || 0);
+                total += qty * price;
+            });
+            const taxRate = parseFloat(document.getElementById('qt-tax-rate')?.value || 0);
+            const tax = total * taxRate / 100;
+            const finalAmt = total + tax;
+            document.getElementById('qt-total').textContent = '$' + total.toFixed(2);
+            document.getElementById('qt-tax').textContent = '$' + tax.toFixed(2);
+            document.getElementById('qt-final').textContent = '$' + finalAmt.toFixed(2);
+        }
+
+        async function createQuotation() {
+            const customer_id = document.getElementById('qt-customer').value;
+            if (!customer_id) { alert('Please select a customer'); return; }
+
+            // Collect items
+            const items = [];
+            let idx = 0;
+            while (document.getElementById('qt-pname-' + idx)) {
+                const pname = document.getElementById('qt-pname-' + idx)?.value;
+                const qty = parseFloat(document.getElementById('qt-qty-' + idx)?.value || 0);
+                const price = parseFloat(document.getElementById('qt-price-' + idx)?.value || 0);
+                if (pname && qty > 0) {
+                    items.push({ product_name: pname, quantity: qty, unit_price: price });
+                }
+                idx++;
+            }
+
+            if (items.length === 0) { alert('Please add at least one item'); return; }
+
+            const data = {
+                customer_id,
+                quotation_date: document.getElementById('qt-date').value,
+                valid_until: document.getElementById('qt-valid').value,
+                tax_rate: parseFloat(document.getElementById('qt-tax-rate').value || 0),
+                notes: document.getElementById('qt-notes').value,
+                items,
+            };
+
+            const res = await api('/api/v1/quotations', 'POST', data);
+            if (res.success) {
+                alert('Quotation created: ' + (res.data?.quotation_no || ''));
+                document.getElementById('generic-modal').classList.add('hidden');
+                renderQuotations();
+            } else {
+                alert('Error: ' + res.message);
+            }
+        }
+
+        async function sendQuotation(id) {
+            const res = await api(`/api/v1/quotations/${id}/send`, 'POST', {});
+            if (res.success) { alert('Quotation sent'); renderQuotations(); }
+            else alert('Error: ' + res.message);
+        }
+
+        async function acceptQuotation(id) {
+            const res = await api(`/api/v1/quotations/${id}/accept`, 'POST', {});
+            if (res.success) { alert('Quotation accepted'); renderQuotations(); }
+            else alert('Error: ' + res.message);
+        }
+
+        async function rejectQuotation(id) {
+            const reason = prompt('Rejection reason:');
+            if (!reason) return;
+            const res = await api(`/api/v1/quotations/${id}/reject`, 'POST', {reason});
+            if (res.success) { alert('Quotation rejected'); renderQuotations(); }
+            else alert('Error: ' + res.message);
+        }
+
+        async function convertQuotation(id) {
+            if (!confirm('Convert this quotation to a sales order?')) return;
+            const res = await api(`/api/v1/quotations/${id}/convert`, 'POST', {});
+            if (res.success) {
+                alert('Converted to order: ' + (res.data?.order?.order_no || ''));
+                renderQuotations();
+            } else {
+                alert('Error: ' + res.message);
+            }
+        }
+
+        async function viewQuotation(id) {
+            const res = await api(`/api/v1/quotations/${id}`);
+            if (!res.success) return;
+            const qt = res.data;
+            const items = qt.items || [];
+            let html = `<div style="padding:20px;max-width:800px;">
+                <h3>Quotation #${qt.quotation_no}</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">
+                    <p><b>Customer:</b> ${qt.customer?.name || '-'}</p>
+                    <p><b>Date:</b> ${qt.quotation_date}</p>
+                    <p><b>Valid Until:</b> ${qt.valid_until || '-'}</p>
+                    <p><b>Status:</b> ${qt.status}</p>
+                    <p><b>Total:</b> $${qt.total_amount}</p>
+                    <p><b>Final:</b> <strong style="color:#52c41a">$${qt.final_amount}</strong></p>
+                </div>
+                <h4>Items:</h4>
+                <table style="width:100%;font-size:13px;"><thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr></thead><tbody>`;
+            html += items.map(i => `<tr><td>${i.product_name}</td><td>${i.quantity} ${i.unit}</td><td>$${i.unit_price}</td><td>$${i.subtotal}</td></tr>`).join('');
+            html += '</tbody></table>';
+            if (qt.notes) html += `<p><b>Notes:</b> ${qt.notes}</p>`;
+            if (qt.converted_order_id) html += `<p><b>Converted to Order:</b> #${qt.converted_order_id}</p>`;
+            html += '</div>';
+            document.getElementById('modal-body').innerHTML = html;
+            document.getElementById('modal-title').textContent = 'Quotation Details';
             document.getElementById('generic-modal').classList.remove('hidden');
         }
 

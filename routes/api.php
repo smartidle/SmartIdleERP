@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\PromotionController;
 use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\InventoryCheckController;
+use App\Http\Controllers\Api\QuotationController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\ReturnController;
@@ -58,6 +59,10 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('products', ProductController::class);
         Route::get('products/search', [ProductController::class, 'search']);
         Route::get('products/{id}/skus', [ProductController::class, 'skus']);
+
+        // SKU Management (Global)
+        Route::get('skus', [ProductController::class, 'allSkus']);
+        Route::put('skus/{sku}', [ProductController::class, 'updateSku']);
         
         // Inventory
         Route::get('inventory', [InventoryController::class, 'index']);
@@ -76,7 +81,18 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('sales-orders', SalesOrderController::class);
         Route::post('sales-orders/{id}/approve', [SalesOrderController::class, 'approve']);
         Route::post('sales-orders/{id}/cancel', [SalesOrderController::class, 'cancel']);
-        
+
+        // Sales Quotations
+        Route::get('quotations', [QuotationController::class, 'index']);
+        Route::get('quotations/statistics', [QuotationController::class, 'statistics']);
+        Route::post('quotations', [QuotationController::class, 'store']);
+        Route::get('quotations/{quotation}', [QuotationController::class, 'show']);
+        Route::put('quotations/{quotation}', [QuotationController::class, 'update']);
+        Route::post('quotations/{quotation}/send', [QuotationController::class, 'send']);
+        Route::post('quotations/{quotation}/accept', [QuotationController::class, 'accept']);
+        Route::post('quotations/{quotation}/reject', [QuotationController::class, 'reject']);
+        Route::post('quotations/{quotation}/convert', [QuotationController::class, 'convertToOrder']);
+
         // Sales Delivery
         Route::get('deliveries', [DeliveryController::class, 'index']);
         Route::post('deliveries', [DeliveryController::class, 'store']);

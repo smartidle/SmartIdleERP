@@ -3,6 +3,10 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+/storage/logs/
 /vendor
 .env
 .env.backup
@@ -20,3 +24,4 @@ yarn-error.log
 /erp.db
 /database/database.sqlite
 /database/database_new.sqlite
+/tests/

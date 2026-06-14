@@ -152,4 +152,50 @@ class ProductController extends Controller
         $skus = $product->skus()->get(['id', 'sku_code', 'spec_values', 'cost_price', 'sale_price', 'stock']);
         return $this->success($skus);
     }
+
+    /**
+     * 全局 SKU 列表（SKU管理）
+     */
+    public function allSkus(Request $request)
+    {
+        $query = \App\Models\ProductSku::with(['product', 'customerPrices']);
+
+        if ($request->has('product_id')) {
+            $query->where('product_id', $request->input('product_id'));
+        }
+        if ($request->has('search')) {
+            $q = $request->input('search');
+            $query->where(function ($sq) use ($q) {
+                $sq->where('sku_code', 'like', "%{$q}%")
+                    ->orWhereHas('product', fn($pq) => $pq->where('name', 'like', "%{$q}%"));
+            });
+        }
+        if ($request->has('status')) {
+            $status = $request->input('status');
+            $query->whereHas('product', fn($pq) => $pq->where('status', $status));
+        }
+
+        $skus = $query->orderBy('id', 'desc')->paginate($request->input('per_page', 50));
+        return $this->success($skus);
+    }
+
+    /**
+     * 更新 SKU 价格和规格
+     */
+    public function updateSku(Request $request, \App\Models\ProductSku $sku)
+    {
+        $validated = $request->validate([
+            'sku_code' => 'nullable|string|max:64',
+            'barcode' => 'nullable|string|max:64',
+            'cost_price' => 'nullable|numeric|min:0',
+            'sale_price' => 'nullable|numeric|min:0',
+            'wholesale_price' => 'nullable|numeric|min:0',
+            'weight' => 'nullable|numeric|min:0',
+            'status' => 'nullable|integer|in:0,1',
+        ]);
+
+        $sku->update(array_filter($validated, fn($v) => $v !== null));
+        $sku->load('product');
+        return $this->success($sku, 'SKU updated');
+    }
 }

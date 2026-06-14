@@ -46,6 +46,12 @@ class ProductSku extends Model
         return $this->hasMany(Inventory::class);
     }
 
+    // 关联客户专属价格
+    public function customerPrices()
+    {
+        return $this->hasMany(CustomerPrice::class, 'sku_id');
+    }
+
     // 获取规格组合描述
     public function getSpecDescriptionAttribute()
     {
