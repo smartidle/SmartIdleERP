@@ -5,29 +5,36 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\SalesOrder;
 use App\Models\SalesOrderItem;
+use App\Services\NotificationService;
+use App\Services\SalesOrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class SalesOrderController extends Controller
 {
+    public function __construct(
+        protected NotificationService $notificationService,
+        protected SalesOrderService $salesOrderService
+    ) {}
+
     public function index(Request $request)
     {
         $query = SalesOrder::with(['customer', 'employee']);
-        
+
         if ($request->has('status')) {
             $query->where('status', $request->input('status'));
         }
-        
+
         if ($request->has('customer_id')) {
             $query->where('customer_id', $request->input('customer_id'));
         }
-        
+
         if ($request->has('search')) {
             $query->where('order_no', 'like', '%' . $request->input('search') . '%');
         }
-        
+
         $orders = $query->orderBy('id', 'desc')->paginate(20);
-        
+
         return $this->success($orders);
     }
 
@@ -39,45 +46,13 @@ class SalesOrderController extends Controller
         ]);
 
         try {
-            DB::beginTransaction();
-            
-            $orderNo = 'SO' . date('Ymd') . str_pad(SalesOrder::count() + 1, 6, '0', STR_PAD_LEFT);
-            
-            $totalAmount = 0;
-            foreach ($request->items as $item) {
-                $totalAmount += ($item['quantity'] ?? 0) * ($item['price'] ?? 0);
-            }
-            
-            $order = SalesOrder::create([
-                'order_no' => $orderNo,
-                'customer_id' => $request->customer_id,
-                'warehouse_id' => null, // No warehouse required
-                'employee_id' => 1,
-                'order_date' => date('Y-m-d'),
-                'total_amount' => $totalAmount,
-                'discount_amount' => 0,
-                'tax_amount' => 0,
-                'status' => 1,
-                'notes' => $request->notes ?? '',
-            ]);
+            $data = $request->only(['customer_id', 'warehouse_id', 'order_date', 'delivery_date', 'shipping_contact', 'shipping_phone', 'shipping_address', 'shipping_fee', 'notes', 'discount_amount', 'promotion_amount', 'coupon_amount']);
+            $data['items'] = $request->input('items');
 
-            foreach ($request->items as $item) {
-                SalesOrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['product_id'],
-                    'sku_id' => $item['sku_id'] ?? null,
-                    'product_name' => $item['product_name'] ?? '',
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['price'],
-                    'subtotal' => $item['quantity'] * $item['price'],
-                ]);
-            }
+            $order = $this->salesOrderService->createOrder($data, $request->user());
 
-            DB::commit();
-            
             return $this->success($order, 'Order created', 201);
         } catch (\Exception $e) {
-            DB::rollBack();
             return $this->error('Failed: ' . $e->getMessage());
         }
     }
@@ -94,24 +69,18 @@ class SalesOrderController extends Controller
             return $this->error('Cannot update confirmed orders');
         }
 
-        $order->update($request->only(['customer_id', 'notes']));
-        
-        if ($request->has('items')) {
-            $order->items()->delete();
-            foreach ($request->items as $item) {
-                SalesOrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['product_id'],
-                    'sku_id' => $item['sku_id'] ?? null,
-                    'product_name' => $item['product_name'] ?? '',
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['price'],
-                    'subtotal' => $item['quantity'] * $item['price'],
-                ]);
+        try {
+            $data = $request->only(['customer_id', 'warehouse_id', 'order_date', 'delivery_date', 'shipping_contact', 'shipping_phone', 'shipping_address', 'shipping_fee', 'notes', 'discount_amount', 'promotion_amount', 'coupon_amount']);
+            if ($request->has('items')) {
+                $data['items'] = $request->input('items');
             }
-        }
 
-        return $this->success($order, 'Updated');
+            $order = $this->salesOrderService->updateOrder($order, $data);
+
+            return $this->success($order, 'Updated');
+        } catch (\Exception $e) {
+            return $this->error('Failed: ' . $e->getMessage());
+        }
     }
 
     public function destroy(SalesOrder $order)
@@ -129,7 +98,9 @@ class SalesOrderController extends Controller
         if ($order->status != 1) {
             return $this->error('Order cannot be approved (current status: ' . $order->status . ')');
         }
+        $oldStatus = $order->status;
         $order->update(['status' => 2]);
+        $this->notificationService->orderStatusChanged($order, 'pending', 'approved');
         return $this->success($order, 'Approved');
     }
 
@@ -139,6 +110,7 @@ class SalesOrderController extends Controller
             return $this->error('Order cannot be cancelled');
         }
         $order->update(['status' => 6]);
+        $this->notificationService->orderStatusChanged($order, (string)$order->getOriginal('status'), 'cancelled');
         return $this->success(null, 'Cancelled');
     }
 

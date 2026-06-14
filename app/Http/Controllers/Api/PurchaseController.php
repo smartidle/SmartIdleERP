@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PurchaseController extends Controller
 {
+    public function __construct(protected NotificationService $notificationService) {}
+
     public function index(Request $request)
     {
         $query = PurchaseOrder::with(['supplier']);
@@ -93,6 +96,7 @@ class PurchaseController extends Controller
             return $this->error('Order cannot be approved (current status: ' . $purchaseOrder->status . ')');
         }
         $purchaseOrder->update(['status' => 2]);
+        $this->notificationService->purchaseOrderStatusChanged($purchaseOrder, 'pending', 'approved');
         return $this->success($purchaseOrder, 'Approved');
     }
     

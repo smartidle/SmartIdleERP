@@ -7,7 +7,9 @@ use App\Models\SalesDelivery;
 use App\Models\SalesDeliveryItem;
 use App\Models\SalesOrder;
 use App\Models\SalesOrderItem;
+use App\Models\Inventory;
 use App\Models\Warehouse;
+use App\Services\InventoryService;
 use Illuminate\Http\Request;
 
 class DeliveryController extends Controller
@@ -53,9 +55,31 @@ class DeliveryController extends Controller
         ]);
 
         $order = SalesOrder::find($request->input('order_id'));
-        
+
         if ($order->status < 2) {
             return $this->error('Order must be approved before delivery', 400);
+        }
+
+        // 库存不足检查（发货前预校验）
+        $inventoryService = app(InventoryService::class);
+        foreach ($request->input('items') as $item) {
+            $orderItem = SalesOrderItem::find($item['order_item_id']);
+            $skuId = $orderItem->sku_id;
+            $qty = $item['quantity'];
+            $warehouseId = $request->input('warehouse_id');
+
+            $inventory = Inventory::where('sku_id', $skuId)
+                ->where('warehouse_id', $warehouseId)
+                ->first();
+
+            $available = $inventory ? $inventory->quantity : 0;
+            if ($available < $qty) {
+                $sku = $orderItem->sku;
+                return $this->error(
+                    "库存不足: SKU [{$sku->sku_code}] 当前库存 {$available} 件，需求 {$qty} 件",
+                    400
+                );
+            }
         }
 
         // 计算是否完全发货
@@ -72,10 +96,10 @@ class DeliveryController extends Controller
             'employee_id' => $request->user()->id,
         ]);
 
-        // 创建发货明细
+        // 创建发货明细 & 扣减库存
         foreach ($request->input('items') as $item) {
             $orderItem = SalesOrderItem::find($item['order_item_id']);
-            
+
             SalesDeliveryItem::create([
                 'delivery_id' => $delivery->id,
                 'order_item_id' => $item['order_item_id'],
@@ -88,6 +112,20 @@ class DeliveryController extends Controller
             // 更新订单项已发货数量
             $orderItem->delivered_qty += $item['quantity'];
             $orderItem->save();
+
+            // 销售出库 → 扣减实际库存
+            if ($item['quantity'] > 0) {
+                $costPrice = $orderItem->cost_price ?? 0;
+                $inventoryService->deductStock(
+                    $orderItem->sku_id,
+                    $request->input('warehouse_id'),
+                    $item['quantity'],
+                    $costPrice,
+                    'sales_delivery',
+                    $delivery->id,
+                    $request->user()->id
+                );
+            }
         }
 
         // 更新订单状态

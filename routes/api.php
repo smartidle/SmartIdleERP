@@ -40,8 +40,8 @@ Route::prefix('v1')->group(function () {
     // Public config
     Route::get('config/public', [SystemConfigController::class, 'publicConfig']);
     
-    // Protected routes (require authentication)
-    Route::middleware('auth:sanctum')->group(function () {
+    // Protected routes (require authentication + operation logging)
+    Route::middleware(['auth:sanctum', 'oplog'])->group(function () {
         
         // Auth
         Route::post('logout', [AuthController::class, 'logout']);
@@ -118,15 +118,21 @@ Route::prefix('v1')->group(function () {
         
         // Employee Management
         Route::get('employees', [EmployeeController::class, 'index']);
-        Route::post('employees', [EmployeeController::class, 'store']);
-        Route::put('employees/{employee}', [EmployeeController::class, 'update']);
-        Route::delete('employees/{employee}', [EmployeeController::class, 'destroy']);
+        Route::post('employees', [EmployeeController::class, 'store'])
+            ->middleware('permission:employee.create');
+        Route::put('employees/{employee}', [EmployeeController::class, 'update'])
+            ->middleware('permission:employee.edit');
+        Route::delete('employees/{employee}', [EmployeeController::class, 'destroy'])
+            ->middleware('permission:employee.delete');
         Route::post('employees/{employee}/change-password', [EmployeeController::class, 'changePassword']);
         Route::get('departments', [EmployeeController::class, 'departments']);
-        Route::post('departments', [EmployeeController::class, 'createDepartment']);
+        Route::post('departments', [EmployeeController::class, 'createDepartment'])
+            ->middleware('permission:department.manage');
         Route::get('roles', [EmployeeController::class, 'roles']);
-        Route::post('roles', [EmployeeController::class, 'createRole']);
-        Route::post('roles/{role}/permissions', [EmployeeController::class, 'assignPermissions']);
+        Route::post('roles', [EmployeeController::class, 'createRole'])
+            ->middleware('permission:role.manage');
+        Route::post('roles/{role}/permissions', [EmployeeController::class, 'assignPermissions'])
+            ->middleware('permission:role.manage');
         
         // Approval
         Route::get('approvals/pending', [ApprovalController::class, 'pending']);
@@ -149,8 +155,11 @@ Route::prefix('v1')->group(function () {
         // System Config
         Route::get('system-config', [SystemConfigController::class, 'index']);
         Route::get('system-config/group/{group}', [SystemConfigController::class, 'getByGroup']);
-        Route::put('system-config', [SystemConfigController::class, 'update']);
-        Route::post('system-config/batch', [SystemConfigController::class, 'batchUpdate']);
-        Route::post('system-config/upload-logo', [SystemConfigController::class, 'uploadLogo']);
+        Route::put('system-config', [SystemConfigController::class, 'update'])
+            ->middleware('permission:system.config');
+        Route::post('system-config/batch', [SystemConfigController::class, 'batchUpdate'])
+            ->middleware('permission:system.config');
+        Route::post('system-config/upload-logo', [SystemConfigController::class, 'uploadLogo'])
+            ->middleware('permission:system.config');
     });
 });

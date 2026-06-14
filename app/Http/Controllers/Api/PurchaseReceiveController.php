@@ -7,7 +7,9 @@ use App\Models\PurchaseReceive;
 use App\Models\PurchaseReceiveItem;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
+use App\Models\PurchaseReceiveItem as PRItem;
 use App\Models\Warehouse;
+use App\Services\InventoryService;
 use Illuminate\Http\Request;
 
 class PurchaseReceiveController extends Controller
@@ -74,13 +76,14 @@ class PurchaseReceiveController extends Controller
 
         // 创建收货明细
         $totalAmount = 0;
+        $inventoryService = app(InventoryService::class);
         foreach ($request->input('items') as $item) {
             $orderItem = PurchaseOrderItem::find($item['order_item_id']);
             $qualifiedQty = $item['qualified_qty'] ?? $item['quantity'];
             $defectiveQty = $item['defective_qty'] ?? 0;
             $amount = $orderItem->unit_price * $qualifiedQty;
 
-            PurchaseReceiveItem::create([
+            PRItem::create([
                 'receive_id' => $receive->id,
                 'order_item_id' => $item['order_item_id'],
                 'product_id' => $orderItem->product_id,
@@ -88,7 +91,7 @@ class PurchaseReceiveController extends Controller
                 'quantity' => $item['quantity'],
                 'qualified_qty' => $qualifiedQty,
                 'defective_qty' => $defectiveQty,
-                'price' => $orderItem->unit_price,
+                'unit_price' => $orderItem->unit_price,
                 'amount' => $amount,
                 'remark' => $item['remark'] ?? null,
             ]);
@@ -96,6 +99,21 @@ class PurchaseReceiveController extends Controller
             // 更新订单项已入库数量
             $orderItem->received_qty += $qualifiedQty;
             $orderItem->save();
+
+            // 采购入库 → 增加实际库存
+            if ($qualifiedQty > 0) {
+                $inventoryService->addStock(
+                    $orderItem->sku_id,
+                    $request->input('warehouse_id'),
+                    $qualifiedQty,
+                    $orderItem->unit_price,
+                    'purchase_receive',
+                    $receive->id,
+                    $request->user()->id,
+                    $order->id,
+                    \App\Models\InventoryLog::TYPE_PURCHASE_IN
+                );
+            }
 
             $totalAmount += $amount;
         }

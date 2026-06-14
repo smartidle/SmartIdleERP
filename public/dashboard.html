@@ -132,15 +132,15 @@
     <div class="container">
         <div class="sidebar">
             <div class="sidebar-item active" onclick="showModule('dashboard')">📊 Dashboard</div>
-            <div class="sidebar-item" onclick="showModule('products')">📦 Products</div>
-            <div class="sidebar-item" onclick="showModule('customers')">👥 Customers</div>
-            <div class="sidebar-item" onclick="showModule('suppliers')">🏭 Suppliers</div>
-            <div class="sidebar-item" onclick="showModule('sales')">🛒 Sales Orders</div>
-            <div class="sidebar-item" onclick="showModule('purchase')">📥 Purchase Orders</div>
-            <div class="sidebar-item" onclick="showModule('inventory')">📈 Inventory</div>
-            <div class="sidebar-item" onclick="showModule('finance')">💰 Finance</div>
-            <div class="sidebar-item" onclick="showModule('employees')">👔 Employees</div>
-            <div class="sidebar-item" onclick="showModule('settings')">⚙️ Settings</div>
+            <div class="sidebar-item" onclick="showModule('products')" data-perm="product.view">📦 Products</div>
+            <div class="sidebar-item" onclick="showModule('customers')" data-perm="customer.view">👥 Customers</div>
+            <div class="sidebar-item" onclick="showModule('suppliers')" data-perm="supplier.view">🏭 Suppliers</div>
+            <div class="sidebar-item" onclick="showModule('sales')" data-perm="sales_order.view">🛒 Sales Orders</div>
+            <div class="sidebar-item" onclick="showModule('purchase')" data-perm="purchase_order.view">📥 Purchase Orders</div>
+            <div class="sidebar-item" onclick="showModule('inventory')" data-perm="inventory.view">📈 Inventory</div>
+            <div class="sidebar-item" onclick="showModule('finance')" data-perm="finance.view">💰 Finance</div>
+            <div class="sidebar-item" onclick="showModule('employees')" data-perm="employee.view">👔 Employees</div>
+            <div class="sidebar-item" onclick="showModule('settings')" data-perm="system.config">⚙️ Settings</div>
         </div>
         <div class="content">
             <!-- ===== Dashboard ===== -->
@@ -577,6 +577,51 @@
         function checkAuth() {
             token = localStorage.getItem('erp_token');
             if (!token) location.href = '/index.html';
+            // Load user permissions
+            loadUserPermissions();
+        }
+
+        // 全局用户权限
+        let currentUser = null;
+        let userPermissions = [];
+
+        async function loadUserPermissions() {
+            try {
+                const res = await api('/api/v1/user');
+                if (res && res.id) {
+                    currentUser = res;
+                    // Extract permission codes from role
+                    const roleCodes = (res.role?.permissions || []).map(p => p.code);
+                    const directCodes = res.permissions || [];
+                    userPermissions = [...new Set([...roleCodes, ...directCodes])];
+                    localStorage.setItem('user_permissions', JSON.stringify(userPermissions));
+                    // Admin can do everything
+                    if (res.role?.code === 'super_admin') {
+                        userPermissions = ['*'];
+                        localStorage.setItem('user_permissions', JSON.stringify(['*']));
+                    }
+                    // Apply permission to sidebar
+                    applySidebarPermissions();
+                }
+            } catch (e) {
+                console.warn('Failed to load user permissions', e);
+            }
+        }
+
+        function hasPermission(perm) {
+            if (userPermissions.includes('*')) return true;
+            return userPermissions.includes(perm);
+        }
+
+        function applySidebarPermissions() {
+            document.querySelectorAll('.sidebar-item[data-perm]').forEach(el => {
+                const required = el.getAttribute('data-perm');
+                if (!hasPermission(required)) {
+                    el.style.display = 'none';
+                } else {
+                    el.style.display = '';
+                }
+            });
         }
         function logout() {
             localStorage.removeItem('erp_token');

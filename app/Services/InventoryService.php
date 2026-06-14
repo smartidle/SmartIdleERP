@@ -116,8 +116,17 @@ class InventoryService
 
     /**
      * 增加库存（退货入库等）
+     * @param int $skuId SKU ID
+     * @param int $warehouseId 仓库ID
+     * @param float $quantity 数量
+     * @param float $costPrice 成本价
+     * @param string $referenceType 来源类型
+     * @param int $referenceId 来源单据ID
+     * @param int $employeeId 操作人ID
+     * @param int $returnOrderId 关联订单ID（可选）
+     * @param int $logType 日志类型，默认退货入库(9)，采购入库传1
      */
-    public function addStock($skuId, $warehouseId, $quantity, $costPrice, $referenceType, $referenceId, $employeeId, $returnOrderId = 0)
+    public function addStock($skuId, $warehouseId, $quantity, $costPrice, $referenceType, $referenceId, $employeeId, $returnOrderId = 0, $logType = InventoryLog::TYPE_RETURN_IN)
     {
         $inventory = Inventory::firstOrCreate(
             [
@@ -140,9 +149,10 @@ class InventoryService
 
         // 记录日志
         InventoryLog::create([
+            'product_id' => $inventory->product_id,
             'sku_id' => $skuId,
             'warehouse_id' => $warehouseId,
-            'type' => InventoryLog::TYPE_RETURN_IN,
+            'type' => $logType,
             'quantity_before' => $quantityBefore,
             'quantity_change' => $quantity,
             'quantity_after' => $inventory->quantity,

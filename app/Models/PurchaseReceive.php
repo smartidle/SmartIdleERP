@@ -51,6 +51,6 @@ class PurchaseReceive extends Model
     // 关联明细
     public function items()
     {
-        return $this->hasMany(PurchaseReceiveItem::class);
+        return $this->hasMany(PurchaseReceiveItem::class, 'receive_id');
     }
 }
