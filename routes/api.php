@@ -23,6 +23,10 @@ use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\ReturnController;
 use App\Http\Controllers\Api\ApprovalController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\WarehouseController;
+use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\Api\BomController;
+use App\Http\Controllers\Api\WorkOrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -203,5 +207,40 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:system.config');
         Route::post('system-config/upload-logo', [SystemConfigController::class, 'uploadLogo'])
             ->middleware('permission:system.config');
+
+        // Warehouses (仓库管理)
+        Route::get('warehouses', [WarehouseController::class, 'index']);
+        Route::post('warehouses', [WarehouseController::class, 'store']);
+        Route::get('warehouses/all', [WarehouseController::class, 'all']);
+        Route::get('warehouses/{warehouse}', [WarehouseController::class, 'show']);
+        Route::put('warehouses/{warehouse}', [WarehouseController::class, 'update']);
+        Route::delete('warehouses/{warehouse}', [WarehouseController::class, 'destroy']);
+
+        // Locations (库位管理)
+        Route::get('locations', [LocationController::class, 'index']);
+        Route::post('locations', [LocationController::class, 'store']);
+        Route::get('locations/warehouse/{warehouseId}', [LocationController::class, 'byWarehouse']);
+        Route::get('locations/{location}', [LocationController::class, 'show']);
+        Route::put('locations/{location}', [LocationController::class, 'update']);
+        Route::delete('locations/{location}', [LocationController::class, 'destroy']);
+
+        // BOM (物料清单)
+        Route::get('boms', [BomController::class, 'index']);
+        Route::post('boms', [BomController::class, 'store']);
+        Route::get('boms/{bom}', [BomController::class, 'show']);
+        Route::put('boms/{bom}', [BomController::class, 'update']);
+        Route::put('boms/{bom}/items', [BomController::class, 'updateItems']);
+        Route::delete('boms/{bom}', [BomController::class, 'destroy']);
+
+        // Work Orders (生产工单)
+        Route::get('work-orders', [WorkOrderController::class, 'index']);
+        Route::get('work-orders/statistics', [WorkOrderController::class, 'statistics']);
+        Route::post('work-orders', [WorkOrderController::class, 'store']);
+        Route::get('work-orders/{workOrder}', [WorkOrderController::class, 'show']);
+        Route::put('work-orders/{workOrder}', [WorkOrderController::class, 'update']);
+        Route::post('work-orders/{workOrder}/approve', [WorkOrderController::class, 'approve']);
+        Route::post('work-orders/{workOrder}/report', [WorkOrderController::class, 'report']);
+        Route::post('work-orders/{workOrder}/close', [WorkOrderController::class, 'close']);
+        Route::post('work-orders/{workOrder}/cancel', [WorkOrderController::class, 'cancel']);
     });
 });

@@ -145,6 +145,12 @@
             <div class="sidebar-item" onclick="showModule('returns')" data-perm="purchase_order.view">📦 Returns</div>
             <div class="sidebar-item" onclick="showModule('checks')" data-perm="inventory.view">🔍 Checks</div>
             <div class="sidebar-item" onclick="showModule('invoices')" data-perm="finance.view">🧾 Invoices</div>
+            <div class="sidebar-item" onclick="showModule('deliveries')" data-perm="sales_order.view">🚚 Deliveries</div>
+            <div class="sidebar-item" onclick="showModule('receives')" data-perm="purchase_order.view">📦 Receives</div>
+            <div class="sidebar-item" onclick="showModule('promotions')" data-perm="product.view">🎯 Promotions</div>
+            <div class="sidebar-item" onclick="showModule('approvals')" data-perm="employee.view">✅ Approvals</div>
+            <div class="sidebar-item" onclick="showModule('warehouses')" data-perm="inventory.view">🏬 Warehouses</div>
+            <div class="sidebar-item" onclick="showModule('boms')" data-perm="product.view">🏭 BOM / Production</div>
             <div class="sidebar-item" onclick="showModule('settings')" data-perm="system.config">⚙️ Settings</div>
         </div>
         <div class="content">
@@ -557,6 +563,137 @@
                         <tbody id="invoicesTable"></tbody>
                     </table>
                     <div class="pagination" id="invoices-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== Deliveries ===== -->
+            <div id="module-deliveries" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">🚚 Deliveries (发货管理)</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <div class="search-box" style="flex:1;max-width:300px;">
+                            <input type="text" id="deliverySearch" placeholder="Search delivery no..." onkeyup="if(event.key==='Enter')filterDeliveries()">
+                        </div>
+                        <select id="deliveryStatusFilter" onchange="filterDeliveries()">
+                            <option value="">All Status</option>
+                            <option value="0">Pending</option>
+                            <option value="1">Shipped</option>
+                            <option value="2">Delivered</option>
+                            <option value="3">Confirmed</option>
+                        </select>
+                        <button class="btn-primary" onclick="openDeliveryModal()">+ New Delivery</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Delivery No.</th><th>Sales Order</th><th>Customer</th><th>Qty</th><th>Logistics</th><th>Tracking No.</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                        <tbody id="deliveriesTable"></tbody>
+                    </table>
+                    <div class="pagination" id="deliveries-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== Purchase Receives ===== -->
+            <div id="module-receives" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">📦 Purchase Receives (采购收货)</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <div class="search-box" style="flex:1;max-width:300px;">
+                            <input type="text" id="receiveSearch" placeholder="Search receive no..." onkeyup="if(event.key==='Enter')filterReceives()">
+                        </div>
+                        <button class="btn-primary" onclick="openReceiveModal()">+ New Receive</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Receive No.</th><th>Purchase Order</th><th>Supplier</th><th>Qty</th><th>Warehouse</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                        <tbody id="receivesTable"></tbody>
+                    </table>
+                    <div class="pagination" id="receives-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== Promotions ===== -->
+            <div id="module-promotions" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">🎯 Promotions (促销管理)</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <div class="search-box" style="flex:1;max-width:300px;">
+                            <input type="text" id="promoSearch" placeholder="Search promotions..." onkeyup="if(event.key==='Enter')filterPromotions()">
+                        </div>
+                        <select id="promoStatusFilter" onchange="filterPromotions()">
+                            <option value="">All Status</option>
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
+                            <option value="2">Expired</option>
+                        </select>
+                        <button class="btn-primary" onclick="openPromoModal()">+ New Promotion</button>
+                        <button class="btn-secondary" onclick="showCoupons()">🎟️ Coupons</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Name</th><th>Type</th><th>Value</th><th>Min Order</th><th>Start</th><th>End</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="promotionsTable"></tbody>
+                    </table>
+                    <div class="pagination" id="promotions-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== Approvals ===== -->
+            <div id="module-approvals" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">✅ Approvals (审批管理)</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <button class="btn-primary" onclick="renderApprovals('pending')" id="tab-pending">📋 Pending</button>
+                        <button class="btn-secondary" onclick="renderApprovals('mine')" id="tab-mine">📝 My Requests</button>
+                        <button class="btn-secondary" onclick="renderApprovals('approved')" id="tab-approved">✅ Approved by Me</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Ref No.</th><th>Type</th><th>Title</th><th>Amount</th><th>Applicant</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="approvalsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== Warehouses ===== -->
+            <div id="module-warehouses" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">🏬 Warehouses (仓库管理)</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <div class="search-box" style="flex:1;max-width:300px;">
+                            <input type="text" id="whSearch" placeholder="Search warehouse..." onkeyup="if(event.key==='Enter')filterWarehouses()">
+                        </div>
+                        <button class="btn-primary" onclick="openWarehouseModal()">+ New Warehouse</button>
+                        <button class="btn-secondary" onclick="renderLocations()">📍 Locations</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Code</th><th>Name</th><th>Type</th><th>Address</th><th>Default</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="warehousesTable"></tbody>
+                    </table>
+                    <div class="pagination" id="warehouses-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== BOM / Production ===== -->
+            <div id="module-boms" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">🏭 BOM & Production (物料清单 & 生产管理)</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <div class="search-box" style="flex:1;max-width:300px;">
+                            <input type="text" id="bomSearch" placeholder="Search BOM or work order..." onkeyup="if(event.key==='Enter')filterBoms()">
+                        </div>
+                        <button class="btn-primary" onclick="showBomTab('boms')" id="tab-bom">📋 BOM List</button>
+                        <button class="btn-secondary" onclick="showBomTab('workorders')" id="tab-wo">🔧 Work Orders</button>
+                    </div>
+                    <div id="bom-panel">
+                        <table>
+                            <thead><tr><th>BOM Code</th><th>Product</th><th>Version</th><th>Output Qty</th><th>Items</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="bomsTable"></tbody>
+                        </table>
+                        <div class="pagination" id="boms-pagination"></div>
+                    </div>
+                    <div id="wo-panel" class="hidden">
+                        <table>
+                            <thead><tr><th>WO No.</th><th>Product</th><th>Planned Qty</th><th>Completed</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="workOrdersTable"></tbody>
+                        </table>
+                        <div class="pagination" id="workorders-pagination"></div>
+                    </div>
                 </div>
             </div>
 
@@ -1970,6 +2107,270 @@
             }
         }
 
+        // ===== Deliveries Module =====
+        let deliveriesData = [];
+        async function renderDeliveries() {
+            const res = await api('/api/v1/deliveries?per_page=100');
+            deliveriesData = res.data?.data || [];
+            if (Array.isArray(deliveriesData.data)) deliveriesData = deliveriesData.data;
+            filterDeliveries();
+        }
+        function filterDeliveries() {
+            const q = (document.getElementById('deliverySearch')?.value || '').toLowerCase();
+            const st = document.getElementById('deliveryStatusFilter')?.value || '';
+            const filtered = deliveriesData.filter(d => {
+                const mq = !q || (d.delivery_no || '').toLowerCase().includes(q);
+                const ms = !st || String(d.status) === st;
+                return mq && ms;
+            });
+            const sm = {0:'⏳ Pending', 1:'🚚 Shipped', 2:'📦 Delivered', 3:'✅ Confirmed'};
+            document.getElementById('deliveriesTable').innerHTML = filtered.length ? filtered.map(d => `<tr>
+                <td>${d.delivery_no || '-'}</td><td>${d.sales_order?.order_no || (d.sales_order_id ? 'SO#'+d.sales_order_id : '-')}</td>
+                <td>${d.customer?.name || '-'}</td><td>${d.total_qty || '-'}</td>
+                <td>${d.logistics_company || '-'}</td><td>${d.tracking_no || '-'}</td>
+                <td>${sm[d.status] || '-'}</td><td>${d.delivery_date || '-'}</td>
+                <td>${d.status < 3 ? `<button class="btn btn-sm btn-success" onclick="confirmDelivery(${d.id})">✅ Confirm</button>` : ''}</td>
+            </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;color:#999;">No deliveries found</td></tr>';
+        }
+        async function confirmDelivery(id) {
+            if (!confirm('Confirm this delivery received?')) return;
+            const res = await api('/api/v1/deliveries/' + id + '/confirm', 'POST');
+            if (res.success) { alert('Delivery confirmed!'); renderDeliveries(); }
+            else alert('Error: ' + (res.message || 'Failed'));
+        }
+        function openDeliveryModal() {
+            alert('Please create a delivery from a sales order.');
+        }
+
+        // ===== Purchase Receives Module =====
+        let receivesData = [];
+        async function renderReceives() {
+            const res = await api('/api/v1/purchase-receives?per_page=100');
+            receivesData = res.data?.data || [];
+            if (Array.isArray(receivesData.data)) receivesData = receivesData.data;
+            filterReceives();
+        }
+        function filterReceives() {
+            const q = (document.getElementById('receiveSearch')?.value || '').toLowerCase();
+            const filtered = receivesData.filter(r => !q || (r.receive_no || '').toLowerCase().includes(q));
+            const sm = {0:'⏳ Pending', 1:'✅ Received', 2:'📦 Stored'};
+            document.getElementById('receivesTable').innerHTML = filtered.length ? filtered.map(r => `<tr>
+                <td>${r.receive_no || '-'}</td><td>${r.purchase_order?.po_number || (r.purchase_order_id ? 'PO#'+r.purchase_order_id : '-')}</td>
+                <td>${r.supplier?.name || '-'}</td><td>${r.total_qty || '-'}</td>
+                <td>${r.warehouse?.name || '-'}</td><td>${sm[r.status] || '-'}</td>
+                <td>${r.receive_date || '-'}</td>
+                <td><button class="btn btn-sm btn-info" onclick="viewReceive(${r.id})">View</button></td>
+            </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:#999;">No receives found</td></tr>';
+        }
+        async function viewReceive(id) {
+            const res = await api('/api/v1/purchase-receives/' + id);
+            const r = res.data?.data;
+            if (!r) return alert('Not found');
+            const items = (r.items || []).map(i => `${i.product_name || 'Item'}: ${i.received_qty} x $${i.unit_price || 0}`).join('\\n');
+            alert(`Receive: ${r.receive_no}\\nSupplier: ${r.supplier?.name || '-'}\\n\\nItems:\\n${items}`);
+        }
+        function openReceiveModal() {
+            alert('Please create a receive from a purchase order.');
+        }
+
+        // ===== Promotions Module =====
+        let promotionsData = [];
+        async function renderPromotions() {
+            const res = await api('/api/v1/promotions?per_page=100');
+            promotionsData = res.data?.data || [];
+            if (Array.isArray(promotionsData.data)) promotionsData = promotionsData.data;
+            filterPromotions();
+        }
+        function filterPromotions() {
+            const q = (document.getElementById('promoSearch')?.value || '').toLowerCase();
+            const st = document.getElementById('promoStatusFilter')?.value || '';
+            const filtered = promotionsData.filter(p => {
+                const mq = !q || (p.name || '').toLowerCase().includes(q);
+                const ms = !st || String(p.status) === st;
+                return mq && ms;
+            });
+            const tm = {1:'💰 Discount', 2:'🎁 Gift', 3:'💵 Voucher', 4:'🎯 Bundle'};
+            const sm = {0:'⚪ Inactive', 1:'🟢 Active', 2:'⚫ Expired'};
+            document.getElementById('promotionsTable').innerHTML = filtered.length ? filtered.map(p => `<tr>
+                <td>${p.name || '-'}</td><td>${tm[p.type] || '-'}</td>
+                <td>${p.discount_value || p.gift_name || '-'}</td>
+                <td>$${p.min_order_amount || 0}</td>
+                <td>${p.start_date || '-'}</td><td>${p.end_date || '-'}</td>
+                <td>${sm[p.status] || '-'}</td>
+                <td><button class="btn btn-sm btn-info" onclick="viewPromotion(${p.id})">View</button></td>
+            </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:#999;">No promotions found</td></tr>';
+        }
+        function openPromoModal() { alert('Promotion creation form will open here.'); }
+        async function showCoupons() {
+            const res = await api('/api/v1/coupons?per_page=100');
+            const list = res.data?.data || [];
+            const items = (Array.isArray(list) ? list : []).map(c => `${c.code || '-'}: ${c.discount_value} off`).join('\\n');
+            alert(`Coupons:\\n${items || 'No coupons found'}`);
+        }
+        async function viewPromotion(id) {
+            const res = await api('/api/v1/promotions/' + id);
+            const p = res.data?.data;
+            if (p) alert(`Promotion: ${p.name}\\nType: ${p.type}\\nValue: ${p.discount_value || '-'}\\nStatus: ${p.status}`);
+        }
+
+        // ===== Approvals Module =====
+        let approvalTab = 'pending';
+        async function renderApprovals(tab) {
+            approvalTab = tab;
+            ['pending','mine','approved'].forEach(t => {
+                const el = document.getElementById('tab-' + t);
+                if (el) { el.className = t === tab ? 'btn-primary' : 'btn-secondary'; }
+            });
+            let endpoint = '/api/v1/approvals/pending';
+            if (tab === 'mine') endpoint = '/api/v1/approvals/my-applications';
+            if (tab === 'approved') endpoint = '/api/v1/approvals/my-approvals';
+            const res = await api(endpoint);
+            let list = res.data?.data || [];
+            if (Array.isArray(list.data)) list = list.data;
+            const sm = {0:'⏳ Pending', 1:'✅ Approved', 2:'❌ Rejected'};
+            document.getElementById('approvalsTable').innerHTML = list.length ? list.map(a => `<tr>
+                <td>${a.ref_no || '-'}</td><td>${a.biz_type || '-'}</td>
+                <td>${a.title || a.description || '-'}</td>
+                <td>$${parseFloat(a.amount || 0).toLocaleString()}</td>
+                <td>${a.applicant?.name || '-'}</td>
+                <td>${sm[a.status] || '-'}</td>
+                <td>${tab === 'pending' && a.status === 0 ? `
+                    <button class="btn btn-sm btn-success" onclick="doApprove(${a.id}, 1)">✅</button>
+                    <button class="btn btn-sm btn-danger" onclick="doApprove(${a.id}, 2)">❌</button>` : '-'}
+                </td>
+            </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:#999;">No approvals found</td></tr>';
+        }
+        async function doApprove(id, action) {
+            const ep = '/api/v1/approvals/' + id + '/approve';
+            const res = await api(ep, 'POST', { action: action, comment: action === 1 ? 'Approved' : 'Rejected' });
+            if (res.success) { alert(action === 1 ? 'Approved!' : 'Rejected!'); renderApprovals(approvalTab); }
+            else alert('Error: ' + (res.message || 'Failed'));
+        }
+
+        // ===== Warehouses Module =====
+        let warehousesData = [];
+        let whTab = 'warehouses';
+        async function renderWarehouses() {
+            const res = await api('/api/v1/warehouses?per_page=100');
+            warehousesData = res.data?.data || [];
+            if (Array.isArray(warehousesData.data)) warehousesData = warehousesData.data;
+            filterWarehouses();
+        }
+        function filterWarehouses() {
+            const q = (document.getElementById('whSearch')?.value || '').toLowerCase();
+            const filtered = warehousesData.filter(w => !q || (w.name || '').toLowerCase().includes(q) || (w.code || '').toLowerCase().includes(q));
+            const tm = {1:'Normal', 2:'Defective', 3:'Raw Material', 4:'Semi-Finished', 5:'Finished'};
+            document.getElementById('warehousesTable').innerHTML = filtered.length ? filtered.map(w => `<tr>
+                <td><strong>${w.code || '-'}</strong></td><td>${w.name || '-'}</td>
+                <td>${tm[w.type] || '-'}</td><td>${w.address || '-'}</td>
+                <td>${w.is_default ? '⭐ Yes' : '-'}</td>
+                <td>${w.status === 1 ? '🟢 Active' : '⚪ Inactive'}</td>
+                <td><button class="btn btn-sm btn-info" onclick="viewWarehouse(${w.id})">View</button></td>
+            </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:#999;">No warehouses found</td></tr>';
+        }
+        async function viewWarehouse(id) {
+            const res = await api('/api/v1/warehouses/' + id);
+            const w = res.data?.data;
+            if (!w) return;
+            const locs = (w.locations || []).map(l => `${l.code} (${l.zone || '-'})`).join(', ');
+            alert(`Warehouse: ${w.name}\\nCode: ${w.code}\\nAddress: ${w.address || '-'}\\nLocations: ${locs || 'None'}`);
+        }
+        function openWarehouseModal() {
+            const name = prompt('Warehouse name:');
+            if (!name) return;
+            const code = prompt('Warehouse code:');
+            if (!code) return;
+            createWarehouse({ name, code, type: 1, status: 1 });
+        }
+        async function createWarehouse(data) {
+            const res = await api('/api/v1/warehouses', 'POST', data);
+            if (res.success) { alert('Warehouse created!'); renderWarehouses(); }
+            else alert('Error: ' + (res.message || 'Failed'));
+        }
+        async function renderLocations() {
+            const res = await api('/api/v1/locations?per_page=200');
+            let list = res.data?.data || [];
+            if (Array.isArray(list.data)) list = list.data;
+            const items = list.map(l => `${l.code} | Zone:${l.zone || '-'} | Shelf:${l.shelf || '-'} | ${l.warehouse?.name || '-'}`).join('\\n');
+            alert(`Locations (${list.length}):\\n${items || 'No locations found'}`);
+        }
+
+        // ===== BOM & Production Module =====
+        async function renderBoms() {
+            const res = await api('/api/v1/boms?per_page=100');
+            let list = res.data?.data || [];
+            if (Array.isArray(list.data)) list = list.data;
+            const sm = {0:'⚪ Draft', 1:'🟢 Active', 2:'⚫ Expired'};
+            document.getElementById('bomsTable').innerHTML = list.length ? list.map(b => `<tr>
+                <td><strong>${b.code || '-'}</strong></td><td>${b.product?.name || '-'}</td>
+                <td>${b.version || 'V1.0'}</td><td>${b.quantity || 1}</td>
+                <td>${(b.items || []).length} items</td><td>${sm[b.status] || '-'}</td>
+                <td><button class="btn btn-sm btn-info" onclick="viewBom(${b.id})">View</button></td>
+            </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:#999;">No BOMs found</td></tr>';
+        }
+        function showBomTab(tab) {
+            const bp = document.getElementById('bom-panel');
+            const wp = document.getElementById('wo-panel');
+            const tb = document.getElementById('tab-bom');
+            const tw = document.getElementById('tab-wo');
+            if (tab === 'boms') {
+                bp.classList.remove('hidden'); wp.classList.add('hidden');
+                tb.className = 'btn-primary'; tw.className = 'btn-secondary';
+                renderBoms();
+            } else {
+                bp.classList.add('hidden'); wp.classList.remove('hidden');
+                tb.className = 'btn-secondary'; tw.className = 'btn-primary';
+                renderWorkOrders();
+            }
+        }
+        function filterBoms() {
+            const tab = document.getElementById('bom-panel').classList.contains('hidden') ? 'wo' : 'bom';
+            if (tab === 'bom') renderBoms(); else renderWorkOrders();
+        }
+        async function viewBom(id) {
+            const res = await api('/api/v1/boms/' + id);
+            const b = res.data?.data;
+            if (!b) return;
+            const items = (b.items || []).map(i => `${i.product?.name || 'Item'}: ${i.quantity} ${i.unit || ''} (损耗: ${i.loss_rate || 0}%)`).join('\\n');
+            alert(`BOM: ${b.code}\\nProduct: ${b.product?.name}\\nVersion: ${b.version}\\n\\nMaterials:\\n${items || 'None'}`);
+        }
+        async function renderWorkOrders() {
+            const res = await api('/api/v1/work-orders?per_page=100');
+            let list = res.data?.data || [];
+            if (Array.isArray(list.data)) list = list.data;
+            const sm = {0:'⏳ Pending', 1:'🔄 In Progress', 2:'🔄 In Progress', 3:'✅ Completed', 4:'📌 Closed', 5:'❌ Cancelled'};
+            const pm = {1:'Normal', 2:'🔥 Urgent', 3:'🚨 Critical'};
+            document.getElementById('workOrdersTable').innerHTML = list.length ? list.map(w => `<tr>
+                <td><strong>${w.wo_no || '-'}</strong></td><td>${w.product?.name || '-'}</td>
+                <td>${w.planned_qty || 0}</td><td>${w.completed_qty || 0}</td>
+                <td>${pm[w.priority] || '-'}</td><td>${sm[w.status] || '-'}</td>
+                <td>
+                    ${w.status === 0 ? `<button class="btn btn-sm btn-success" onclick="approveWO(${w.id})">Approve</button>` : ''}
+                    ${w.status === 2 ? `<button class="btn btn-sm btn-primary" onclick="reportWO(${w.id})">Report</button>` : ''}
+                    ${w.status === 2 || w.status === 3 ? `<button class="btn btn-sm btn-secondary" onclick="closeWO(${w.id})">Close</button>` : ''}
+                </td>
+            </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:#999;">No work orders found</td></tr>';
+        }
+        async function approveWO(id) {
+            const res = await api('/api/v1/work-orders/' + id + '/approve', 'POST');
+            if (res.success) { alert('Work order approved!'); renderWorkOrders(); }
+            else alert('Error: ' + (res.message || 'Failed'));
+        }
+        async function reportWO(id) {
+            const qty = prompt('Report quantity (qualified):');
+            if (!qty) return;
+            const def = prompt('Defective quantity:', '0') || '0';
+            const res = await api('/api/v1/work-orders/' + id + '/report', 'POST', { report_qty: parseFloat(qty), qualified_qty: parseFloat(qty), defective_qty: parseFloat(def) });
+            if (res.success) { alert('Report submitted!'); renderWorkOrders(); }
+            else alert('Error: ' + (res.message || 'Failed'));
+        }
+        async function closeWO(id) {
+            if (!confirm('Close this work order?')) return;
+            const res = await api('/api/v1/work-orders/' + id + '/close', 'POST');
+            if (res.success) { alert('Work order closed!'); renderWorkOrders(); }
+            else alert('Error: ' + (res.message || 'Failed'));
+        }
+
         // ===== Settings =====
         async function loadSettings() {
             try {
@@ -2045,6 +2446,12 @@
             if (m === 'invoices') renderInvoices();
             if (m === 'quotations') renderQuotations();
             if (m === 'skus') renderSkus();
+            if (m === 'deliveries') renderDeliveries();
+            if (m === 'receives') renderReceives();
+            if (m === 'promotions') renderPromotions();
+            if (m === 'approvals') renderApprovals('pending');
+            if (m === 'warehouses') renderWarehouses();
+            if (m === 'boms') { showBomTab('boms'); renderBoms(); }
         }
 
         // ===== Purchase Returns Module =====
