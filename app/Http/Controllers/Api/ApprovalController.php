@@ -207,10 +207,10 @@ class ApprovalController extends Controller
 
         $delegate = ApprovalDelegate::create([
             'delegator_id' => $user->id,
-            'delegatee_id' => $request->input('delegatee_id'),
+            'delegate_id' => $request->input('delegatee_id'),
             'start_date' => $request->input('start_date'),
             'end_date' => $request->input('end_date'),
-            'flow_ids' => json_encode($request->input('flow_ids')),
+            'module' => implode(',', $request->input('flow_ids')),
             'status' => 1,
         ]);
 

@@ -4,9 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Promotion;
-use App\Models\PromotionProduct;
 use App\Models\Coupon;
-use App\Models\CouponCustomer;
+use App\Models\CustomerCoupon;
 use Illuminate\Http\Request;
 
 class PromotionController extends Controller
@@ -162,7 +161,7 @@ class PromotionController extends Controller
         $coupon = Coupon::find($request->input('coupon_id'));
         
         foreach ($request->input('customer_ids') as $customerId) {
-            CouponCustomer::create([
+            CustomerCoupon::create([
                 'coupon_id' => $coupon->id,
                 'customer_id' => $customerId,
                 'status' => 1,

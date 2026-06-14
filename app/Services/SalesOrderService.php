@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\SalesOrder;
 use App\Models\SalesOrderItem;
-use App\Models\SalesQuote;
 use App\Models\Product;
 use App\Models\ProductSku;
 use App\Models\Customer;
