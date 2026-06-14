@@ -151,6 +151,12 @@
             <div class="sidebar-item" onclick="showModule('approvals')" data-perm="employee.view">✅ Approvals</div>
             <div class="sidebar-item" onclick="showModule('warehouses')" data-perm="inventory.view">🏬 Warehouses</div>
             <div class="sidebar-item" onclick="showModule('boms')" data-perm="product.view">🏭 BOM / Production</div>
+            <div class="sidebar-item" onclick="showModule('transfers')" data-perm="inventory.view">🔄 Transfers</div>
+            <div class="sidebar-item" onclick="showModule('inquiries')" data-perm="purchase_order.view">📝 Inquiries</div>
+            <div class="sidebar-item" onclick="showModule('logs')" data-perm="employee.view">📋 Audit Logs</div>
+            <div class="sidebar-item" onclick="showModule('costs')" data-perm="finance.view">💰 Cost Analysis</div>
+            <div class="sidebar-item" onclick="showModule('reconciles')" data-perm="finance.view">🔗 Reconciles</div>
+            <div class="sidebar-item" onclick="showModule('print')" data-perm="system.config">🖨️ Print Templates</div>
             <div class="sidebar-item" onclick="showModule('settings')" data-perm="system.config">⚙️ Settings</div>
         </div>
         <div class="content">
@@ -694,6 +700,140 @@
                         </table>
                         <div class="pagination" id="workorders-pagination"></div>
                     </div>
+                </div>
+            </div>
+
+            <!-- ===== Stock Transfers ===== -->
+            <div id="module-transfers" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">🔄 Stock Transfers (库存调拨)</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <div class="search-box" style="flex:1;max-width:300px;">
+                            <input type="text" id="transferSearch" placeholder="Search transfer no..." onkeyup="if(event.key==='Enter')filterTransfers()">
+                        </div>
+                        <select id="transferStatusFilter" onchange="filterTransfers()">
+                            <option value="">All Status</option>
+                            <option value="0">Draft</option>
+                            <option value="1">Approved</option>
+                            <option value="2">In Transit</option>
+                            <option value="3">Completed</option>
+                            <option value="4">Cancelled</option>
+                        </select>
+                        <button class="btn-primary" onclick="openTransferModal()">+ New Transfer</button>
+                        <button class="btn-secondary" onclick="renderFreezes()">❄️ Inventory Freezes</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Transfer No.</th><th>From</th><th>To</th><th>Items</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="transfersTable"></tbody>
+                    </table>
+                    <div class="pagination" id="transfers-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== Purchase Inquiries ===== -->
+            <div id="module-inquiries" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">📝 Purchase Inquiries (采购询价)</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <div class="search-box" style="flex:1;max-width:300px;">
+                            <input type="text" id="inquirySearch" placeholder="Search inquiry no..." onkeyup="if(event.key==='Enter')filterInquiries()">
+                        </div>
+                        <select id="inquiryStatusFilter" onchange="filterInquiries()">
+                            <option value="">All Status</option>
+                            <option value="0">Inquiring</option>
+                            <option value="1">Quoted</option>
+                            <option value="2">Converted</option>
+                            <option value="3">Cancelled</option>
+                        </select>
+                        <button class="btn-primary" onclick="openInquiryModal()">+ New Inquiry</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Inquiry No.</th><th>Items</th><th>Quotes</th><th>Expected Date</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="inquiriesTable"></tbody>
+                    </table>
+                    <div class="pagination" id="inquiries-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== Audit Logs ===== -->
+            <div id="module-logs" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">📋 Audit Logs (操作日志)</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <div class="search-box" style="flex:1;max-width:300px;">
+                            <input type="text" id="logSearch" placeholder="Search description..." onkeyup="if(event.key==='Enter')filterLogs()">
+                        </div>
+                        <select id="logModuleFilter" onchange="filterLogs()">
+                            <option value="">All Modules</option>
+                            <option value="sales">Sales</option>
+                            <option value="purchase">Purchase</option>
+                            <option value="inventory">Inventory</option>
+                            <option value="finance">Finance</option>
+                        </select>
+                    </div>
+                    <table>
+                        <thead><tr><th>Time</th><th>Module</th><th>Action</th><th>Description</th><th>IP</th></tr></thead>
+                        <tbody id="logsTable"></tbody>
+                    </table>
+                    <div class="pagination" id="logs-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== Cost Analysis ===== -->
+            <div id="module-costs" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">💰 Cost Analysis (成本分析)</h2>
+                <div style="display:flex;gap:15px;margin-bottom:20px;">
+                    <div class="stat-card"><h3 id="costTotal">$0</h3><p>Total Cost</p></div>
+                    <div class="stat-card"><h3 id="costPurchase">$0</h3><p>Purchase Cost</p></div>
+                    <div class="stat-card"><h3 id="costProduction">$0</h3><p>Production Cost</p></div>
+                    <div class="stat-card"><h3 id="costOther">$0</h3><p>Other Cost</p></div>
+                </div>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <span>Top 10 Products by Cost</span>
+                    </div>
+                    <table>
+                        <thead><tr><th>Product</th><th>Total Cost</th><th>Records</th></tr></thead>
+                        <tbody id="costByProductTable"></tbody>
+                    </table>
+                </div>
+                <div class="data-table" style="margin-top:20px;">
+                    <div class="toolbar"><span>Recent Cost Records</span></div>
+                    <table>
+                        <thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Amount</th><th>Qty</th><th>Unit Cost</th></tr></thead>
+                        <tbody id="costRecordsTable"></tbody>
+                    </table>
+                    <div class="pagination" id="costs-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== Reconciles ===== -->
+            <div id="module-reconciles" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">🔗 Reconciles (财务核销)</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <button class="btn-primary" onclick="openReconcileModal()">+ New Reconcile</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Order No.</th><th>Amount</th><th>Date</th></tr></thead>
+                        <tbody id="reconcilesTable"></tbody>
+                    </table>
+                    <div class="pagination" id="reconciles-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== Print Templates ===== -->
+            <div id="module-print" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">🖨️ Print Templates (打印模板)</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <button class="btn-primary" onclick="openPrintTemplateModal()">+ New Template</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Actions</th></tr></thead>
+                        <tbody id="printTemplatesTable"></tbody>
+                    </table>
+                    <div class="pagination" id="print-pagination"></div>
                 </div>
             </div>
 
@@ -2138,8 +2278,25 @@
             if (res.success) { alert('Delivery confirmed!'); renderDeliveries(); }
             else alert('Error: ' + (res.message || 'Failed'));
         }
-        function openDeliveryModal() {
-            alert('Please create a delivery from a sales order.');
+        async function openDeliveryModal() {
+            // Get sales orders to select from
+            const soRes = await api('/api/v1/sales-orders?per_page=50&status=1');
+            const orders = extractList(soRes);
+            if (!orders.length) { alert('No approved sales orders to deliver'); return; }
+            const orderList = orders.map(o => `SO#${o.id} - ${o.customer?.name || '-'} ($${o.total_amount || 0})`).join('\\n');
+            const idx = prompt('Select order number (1-' + orders.length + '):\\n' + orderList);
+            if (!idx || idx < 1 || idx > orders.length) return;
+            const order = orders[parseInt(idx) - 1];
+            const logistics = prompt('Logistics company:', 'SF Express');
+            const tracking = prompt('Tracking number:', 'SF' + Date.now());
+            const res = await api('/api/v1/deliveries', 'POST', {
+                sales_order_id: order.id,
+                delivery_date: new Date().toISOString().slice(0, 10),
+                logistics_company: logistics || '',
+                tracking_no: tracking || '',
+            });
+            if (res.success) { alert('Delivery created!'); renderDeliveries(); }
+            else alert('Error: ' + (res.message || 'Failed'));
         }
 
         // ===== Purchase Receives Module =====
@@ -2169,8 +2326,25 @@
             const items = (r.items || []).map(i => `${i.product_name || 'Item'}: ${i.received_qty} x $${i.unit_price || 0}`).join('\\n');
             alert(`Receive: ${r.receive_no}\\nSupplier: ${r.supplier?.name || '-'}\\n\\nItems:\\n${items}`);
         }
-        function openReceiveModal() {
-            alert('Please create a receive from a purchase order.');
+        async function openReceiveModal() {
+            // Get purchase orders to select from
+            const poRes = await api('/api/v1/purchase-orders?per_page=50&status=1');
+            const orders = extractList(poRes);
+            if (!orders.length) { alert('No approved purchase orders to receive'); return; }
+            const orderList = orders.map(o => `PO#${o.id} - ${o.supplier?.name || '-'} ($${o.total_amount || 0})`).join('\\n');
+            const idx = prompt('Select order number (1-' + orders.length + '):\\n' + orderList);
+            if (!idx || idx < 1 || idx > orders.length) return;
+            const order = orders[parseInt(idx) - 1];
+            const whRes = await api('/api/v1/warehouses/all');
+            const whs = extractList(whRes);
+            const whId = whs[0]?.id || 1;
+            const res = await api('/api/v1/purchase-receives', 'POST', {
+                purchase_order_id: order.id,
+                warehouse_id: whId,
+                receive_date: new Date().toISOString().slice(0, 10),
+            });
+            if (res.success) { alert('Receive created!'); renderReceives(); }
+            else alert('Error: ' + (res.message || 'Failed'));
         }
 
         // ===== Promotions Module =====
@@ -2200,7 +2374,22 @@
                 <td><button class="btn btn-sm btn-info" onclick="viewPromotion(${p.id})">View</button></td>
             </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:#999;">No promotions found</td></tr>';
         }
-        function openPromoModal() { alert('Promotion creation form will open here.'); }
+        async function openPromoModal() {
+            const name = prompt('Promotion name:');
+            if (!name) return;
+            const type = prompt('Type (1=Discount, 2=Gift, 3=Voucher, 4=Bundle):', '1');
+            const value = prompt('Discount value (e.g. 10 for 10% off):', '10');
+            const minOrder = prompt('Minimum order amount:', '0');
+            const startDate = prompt('Start date (YYYY-MM-DD):', new Date().toISOString().slice(0, 10));
+            const endDate = prompt('End date (YYYY-MM-DD):', new Date(Date.now() + 30*86400000).toISOString().slice(0, 10));
+            const res = await api('/api/v1/promotions', 'POST', {
+                name, type: parseInt(type), discount_value: parseFloat(value),
+                min_order_amount: parseFloat(minOrder || 0),
+                start_date: startDate, end_date: endDate, status: 1,
+            });
+            if (res.success) { alert('Promotion created!'); renderPromotions(); }
+            else alert('Error: ' + (res.message || 'Failed'));
+        }
         async function showCoupons() {
             const res = await api('/api/v1/coupons?per_page=100');
             const list = res.data?.data || [];
@@ -2371,6 +2560,228 @@
             else alert('Error: ' + (res.message || 'Failed'));
         }
 
+        // ===== Stock Transfers Module =====
+        let transfersData = [];
+        async function renderTransfers() {
+            const res = await api('/api/v1/stock-transfers?per_page=100');
+            transfersData = extractList(res);
+            filterTransfers();
+        }
+        function filterTransfers() {
+            const q = (document.getElementById('transferSearch')?.value || '').toLowerCase();
+            const st = document.getElementById('transferStatusFilter')?.value || '';
+            const filtered = transfersData.filter(t => {
+                const mq = !q || (t.transfer_no || '').toLowerCase().includes(q);
+                const ms = !st || String(t.status) === st;
+                return mq && ms;
+            });
+            const sm = {0:'⚪ Draft', 1:'✅ Approved', 2:'🚚 In Transit', 3:'📦 Completed', 4:'❌ Cancelled'};
+            document.getElementById('transfersTable').innerHTML = filtered.length ? filtered.map(t => `<tr>
+                <td><strong>${t.transfer_no || '-'}</strong></td>
+                <td>${t.from_warehouse?.name || '-'}</td><td>${t.to_warehouse?.name || '-'}</td>
+                <td>${(t.items || []).length} items</td><td>${sm[t.status] || '-'}</td>
+                <td>
+                    ${t.status === 0 ? `<button class="btn btn-sm btn-primary" onclick="shipTransfer(${t.id})">Ship</button>` : ''}
+                    ${t.status === 2 ? `<button class="btn btn-sm btn-success" onclick="completeTransfer(${t.id})">Receive</button>` : ''}
+                    ${t.status < 3 ? `<button class="btn btn-sm btn-danger" onclick="cancelTransfer(${t.id})">Cancel</button>` : ''}
+                </td>
+            </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:#999;">No transfers found</td></tr>';
+        }
+        async function openTransferModal() {
+            const whRes = await api('/api/v1/warehouses/all');
+            const whs = extractList(whRes);
+            if (whs.length < 2) { alert('Need at least 2 warehouses to transfer'); return; }
+            const whOptions = whs.map(w => `${w.id}:${w.name}`).join(', ');
+            const fromId = whs[0].id;
+            const toId = whs.length > 1 ? whs[1].id : whs[0].id;
+            const prodRes = await api('/api/v1/products?per_page=5');
+            const prods = extractList(prodRes);
+            const prodId = prods[0]?.id || 1;
+            const qty = prompt('Transfer quantity:', '10');
+            if (!qty) return;
+            const res = await api('/api/v1/stock-transfers', 'POST', {
+                from_warehouse_id: fromId, to_warehouse_id: toId,
+                notes: 'Manual transfer',
+                items: [{ product_id: prodId, quantity: parseFloat(qty) }]
+            });
+            if (res.success) { alert('Transfer created!'); renderTransfers(); }
+            else alert('Error: ' + (res.message || 'Failed'));
+        }
+        async function shipTransfer(id) {
+            if (!confirm('Ship this transfer? Stock will be deducted from source.')) return;
+            const res = await api('/api/v1/stock-transfers/' + id + '/ship', 'POST');
+            if (res.success) { alert('Transfer shipped!'); renderTransfers(); }
+            else alert('Error: ' + (res.message || 'Failed'));
+        }
+        async function completeTransfer(id) {
+            if (!confirm('Confirm receipt? Stock will be added to destination.')) return;
+            const res = await api('/api/v1/stock-transfers/' + id + '/complete', 'POST');
+            if (res.success) { alert('Transfer completed!'); renderTransfers(); }
+            else alert('Error: ' + (res.message || 'Failed'));
+        }
+        async function cancelTransfer(id) {
+            if (!confirm('Cancel this transfer?')) return;
+            const res = await api('/api/v1/stock-transfers/' + id + '/cancel', 'POST');
+            if (res.success) { alert('Transfer cancelled!'); renderTransfers(); }
+            else alert('Error: ' + (res.message || 'Failed'));
+        }
+        async function renderFreezes() {
+            const res = await api('/api/v1/inventory-freezes');
+            const list = extractList(res);
+            const items = list.map(f => `${f.product?.name || '-'}: ${f.quantity} (${f.reason || '-'})`).join('\\n');
+            alert(`Inventory Freezes (${list.length}):\\n${items || 'No freezes'}`);
+        }
+
+        // ===== Purchase Inquiries Module =====
+        let inquiriesData = [];
+        async function renderInquiries() {
+            const res = await api('/api/v1/purchase-inquiries?per_page=100');
+            inquiriesData = extractList(res);
+            filterInquiries();
+        }
+        function filterInquiries() {
+            const q = (document.getElementById('inquirySearch')?.value || '').toLowerCase();
+            const st = document.getElementById('inquiryStatusFilter')?.value || '';
+            const filtered = inquiriesData.filter(i => {
+                const mq = !q || (i.inquiry_no || '').toLowerCase().includes(q);
+                const ms = !st || String(i.status) === st;
+                return mq && ms;
+            });
+            const sm = {0:'🔵 Inquiring', 1:'💬 Quoted', 2:'📦 Converted', 3:'❌ Cancelled'};
+            document.getElementById('inquiriesTable').innerHTML = filtered.length ? filtered.map(i => `<tr>
+                <td><strong>${i.inquiry_no || '-'}</strong></td>
+                <td>${(i.items || []).length} items</td>
+                <td>${(i.quotes || []).length} quotes</td>
+                <td>${i.expected_date || '-'}</td><td>${sm[i.status] || '-'}</td>
+                <td><button class="btn btn-sm btn-info" onclick="viewInquiry(${i.id})">View</button></td>
+            </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:#999;">No inquiries found</td></tr>';
+        }
+        async function openInquiryModal() {
+            const prodRes = await api('/api/v1/products?per_page=5');
+            const prods = extractList(prodRes);
+            const prodId = prods[0]?.id || 1;
+            const qty = prompt('Inquiry quantity:', '100');
+            if (!qty) return;
+            const res = await api('/api/v1/purchase-inquiries', 'POST', {
+                expected_date: new Date(Date.now() + 7*86400000).toISOString().slice(0,10),
+                notes: 'Test inquiry',
+                items: [{ product_id: prodId, quantity: parseFloat(qty) }]
+            });
+            if (res.success) { alert('Inquiry created!'); renderInquiries(); }
+            else alert('Error: ' + (res.message || 'Failed'));
+        }
+        async function viewInquiry(id) {
+            const res = await api('/api/v1/purchase-inquiries/' + id);
+            const iq = res.data?.data;
+            if (!iq) return;
+            const items = (iq.items || []).map(i => `${i.product?.name || 'Item'}: ${i.quantity}`).join('\\n');
+            const quotes = (iq.quotes || []).map(q => `  ${q.supplier?.name || '-'}: $${q.unit_price} (${q.delivery_days}d)`).join('\\n');
+            alert(`Inquiry: ${iq.inquiry_no}\\n\\nItems:\\n${items}\\n\\nQuotes:\\n${quotes || 'No quotes yet'}`);
+        }
+
+        // ===== Audit Logs Module =====
+        let logsData = [];
+        async function renderLogs() {
+            const res = await api('/api/v1/operation-logs?per_page=100');
+            logsData = extractList(res);
+            filterLogs();
+        }
+        function filterLogs() {
+            const q = (document.getElementById('logSearch')?.value || '').toLowerCase();
+            const mod = document.getElementById('logModuleFilter')?.value || '';
+            const filtered = logsData.filter(l => {
+                const mq = !q || (l.description || '').toLowerCase().includes(q) || (l.action || '').toLowerCase().includes(q);
+                const mm = !mod || (l.module || '') === mod;
+                return mq && mm;
+            });
+            document.getElementById('logsTable').innerHTML = filtered.length ? filtered.map(l => `<tr>
+                <td>${l.create_time || '-'}</td><td>${l.module || '-'}</td>
+                <td>${l.action || '-'}</td><td>${l.description || '-'}</td>
+                <td>${l.ip || '-'}</td>
+            </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:#999;">No logs found</td></tr>';
+        }
+
+        // ===== Cost Analysis Module =====
+        async function renderCosts() {
+            // Statistics
+            const statsRes = await api('/api/v1/cost-records/statistics');
+            const stats = statsRes.data?.data || {};
+            document.getElementById('costTotal').textContent = '$' + parseFloat(stats.total_cost || 0).toLocaleString();
+            document.getElementById('costPurchase').textContent = '$' + parseFloat(stats.purchase_cost || 0).toLocaleString();
+            document.getElementById('costProduction').textContent = '$' + parseFloat(stats.production_cost || 0).toLocaleString();
+            document.getElementById('costOther').textContent = '$' + parseFloat(stats.other_cost || 0).toLocaleString();
+            // Top products
+            const byProd = stats.by_product || [];
+            document.getElementById('costByProductTable').innerHTML = byProd.length ? byProd.map(p => `<tr>
+                <td>${p.product?.name || '-'}</td><td>$${parseFloat(p.total || 0).toLocaleString()}</td>
+                <td>${p.cnt || 0}</td>
+            </tr>`).join('') : '<tr><td colspan="3" style="text-align:center;color:#999;">No data</td></tr>';
+            // Recent records
+            const recRes = await api('/api/v1/cost-records?per_page=20');
+            const records = extractList(recRes);
+            const tm = {1:'💰 Purchase', 2:'🏭 Production', 3:'📋 Other'};
+            document.getElementById('costRecordsTable').innerHTML = records.length ? records.map(r => `<tr>
+                <td>${r.create_time || '-'}</td><td>${r.product?.name || '-'}</td>
+                <td>${tm[r.cost_type] || '-'}</td><td>$${parseFloat(r.amount || 0).toLocaleString()}</td>
+                <td>${r.quantity || '-'}</td><td>$${parseFloat(r.unit_cost || 0).toFixed(2)}</td>
+            </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:#999;">No records</td></tr>';
+        }
+
+        // ===== Reconciles Module =====
+        async function renderReconciles() {
+            const res = await api('/api/v1/reconciles?per_page=100');
+            const list = extractList(res);
+            document.getElementById('reconcilesTable').innerHTML = list.length ? list.map(r => `<tr>
+                <td>${r.order?.order_no || '-'}</td>
+                <td>$${parseFloat(r.amount || 0).toLocaleString()}</td>
+                <td>${r.create_time || '-'}</td>
+            </tr>`).join('') : '<tr><td colspan="3" style="text-align:center;color:#999;">No reconciles found</td></tr>';
+        }
+        async function openReconcileModal() {
+            const orderId = prompt('Order ID to reconcile:');
+            if (!orderId) return;
+            const amount = prompt('Reconcile amount:');
+            if (!amount) return;
+            const res = await api('/api/v1/reconciles', 'POST', { order_id: parseInt(orderId), amount: parseFloat(amount) });
+            if (res.success) { alert('Reconcile created!'); renderReconciles(); }
+            else alert('Error: ' + (res.message || 'Failed'));
+        }
+
+        // ===== Print Templates Module =====
+        async function renderPrintTemplates() {
+            const res = await api('/api/v1/print-templates?per_page=100');
+            const list = extractList(res);
+            const tm = {1:'Sales Order', 2:'Purchase Order', 3:'Delivery', 4:'Receive', 5:'Invoice', 6:'Quotation', 7:'Statement'};
+            document.getElementById('printTemplatesTable').innerHTML = list.length ? list.map(t => `<tr>
+                <td>${t.name || '-'}</td><td>${tm[t.type] || '-'}</td>
+                <td>${t.is_default ? '⭐ Yes' : 'No'}</td>
+                <td><button class="btn btn-sm btn-info" onclick="viewPrintTemplate(${t.id})">View</button></td>
+            </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:#999;">No templates found</td></tr>';
+        }
+        async function openPrintTemplateModal() {
+            const name = prompt('Template name:');
+            if (!name) return;
+            const type = prompt('Type (1=SO,2=PO,3=Delivery,4=Receive,5=Invoice,6=Quotation,7=Statement):', '1');
+            if (!type) return;
+            const content = prompt('Template HTML content (use {{field}} placeholders):', '<h1>{{company_name}}</h1><p>Order: {{order_no}}</p>');
+            if (!content) return;
+            const res = await api('/api/v1/print-templates', 'POST', { name, type: parseInt(type), content });
+            if (res.success) { alert('Template created!'); renderPrintTemplates(); }
+            else alert('Error: ' + (res.message || 'Failed'));
+        }
+        async function viewPrintTemplate(id) {
+            const res = await api('/api/v1/print-templates/' + id);
+            const t = res.data?.data;
+            if (t) alert(`Template: ${t.name}\\nType: ${t.type}\\n\\nContent:\\n${t.content}`);
+        }
+
+        // ===== Utility: extract list from paginated response =====
+        function extractList(res) {
+            let d = res.data?.data || [];
+            if (d.data && Array.isArray(d.data)) return d.data;
+            return Array.isArray(d) ? d : [];
+        }
+
         // ===== Settings =====
         async function loadSettings() {
             try {
@@ -2452,6 +2863,12 @@
             if (m === 'approvals') renderApprovals('pending');
             if (m === 'warehouses') renderWarehouses();
             if (m === 'boms') { showBomTab('boms'); renderBoms(); }
+            if (m === 'transfers') renderTransfers();
+            if (m === 'inquiries') renderInquiries();
+            if (m === 'logs') renderLogs();
+            if (m === 'costs') renderCosts();
+            if (m === 'reconciles') renderReconciles();
+            if (m === 'print') renderPrintTemplates();
         }
 
         // ===== Purchase Returns Module =====

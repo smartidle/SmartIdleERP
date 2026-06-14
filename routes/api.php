@@ -27,6 +27,12 @@ use App\Http\Controllers\Api\WarehouseController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\BomController;
 use App\Http\Controllers\Api\WorkOrderController;
+use App\Http\Controllers\Api\StockTransferController;
+use App\Http\Controllers\Api\PurchaseInquiryController;
+use App\Http\Controllers\Api\OperationLogController;
+use App\Http\Controllers\Api\CostRecordController;
+use App\Http\Controllers\Api\ReconcileController;
+use App\Http\Controllers\Api\PrintTemplateController;
 
 /*
 |--------------------------------------------------------------------------
@@ -242,5 +248,44 @@ Route::prefix('v1')->group(function () {
         Route::post('work-orders/{workOrder}/report', [WorkOrderController::class, 'report']);
         Route::post('work-orders/{workOrder}/close', [WorkOrderController::class, 'close']);
         Route::post('work-orders/{workOrder}/cancel', [WorkOrderController::class, 'cancel']);
+
+        // Stock Transfers (库存调拨)
+        Route::get('stock-transfers', [StockTransferController::class, 'index']);
+        Route::post('stock-transfers', [StockTransferController::class, 'store']);
+        Route::get('stock-transfers/{stockTransfer}', [StockTransferController::class, 'show']);
+        Route::post('stock-transfers/{stockTransfer}/ship', [StockTransferController::class, 'ship']);
+        Route::post('stock-transfers/{stockTransfer}/complete', [StockTransferController::class, 'complete']);
+        Route::post('stock-transfers/{stockTransfer}/cancel', [StockTransferController::class, 'cancel']);
+        // Inventory Freezes (库存冻结)
+        Route::get('inventory-freezes', [StockTransferController::class, 'freezes']);
+        Route::post('inventory-freezes/{freeze}/unfreeze', [StockTransferController::class, 'unfreeze']);
+
+        // Purchase Inquiries (采购询价)
+        Route::get('purchase-inquiries', [PurchaseInquiryController::class, 'index']);
+        Route::post('purchase-inquiries', [PurchaseInquiryController::class, 'store']);
+        Route::get('purchase-inquiries/{purchaseInquiry}', [PurchaseInquiryController::class, 'show']);
+        Route::post('purchase-inquiries/{purchaseInquiry}/quotes', [PurchaseInquiryController::class, 'addQuote']);
+        Route::post('purchase-inquiry-quotes/{quote}/select', [PurchaseInquiryController::class, 'selectQuote']);
+        Route::post('purchase-inquiries/{purchaseInquiry}/cancel', [PurchaseInquiryController::class, 'cancel']);
+
+        // Operation Logs (操作日志)
+        Route::get('operation-logs', [OperationLogController::class, 'index']);
+        Route::get('operation-logs/{operationLog}', [OperationLogController::class, 'show']);
+
+        // Cost Records (成本记录)
+        Route::get('cost-records', [CostRecordController::class, 'index']);
+        Route::get('cost-records/statistics', [CostRecordController::class, 'statistics']);
+
+        // Reconciles (财务核销对账)
+        Route::get('reconciles', [ReconcileController::class, 'index']);
+        Route::post('reconciles', [ReconcileController::class, 'store']);
+
+        // Print Templates (打印模板)
+        Route::get('print-templates', [PrintTemplateController::class, 'index']);
+        Route::post('print-templates', [PrintTemplateController::class, 'store']);
+        Route::get('print-templates/by-type/{type}', [PrintTemplateController::class, 'byType']);
+        Route::get('print-templates/{printTemplate}', [PrintTemplateController::class, 'show']);
+        Route::put('print-templates/{printTemplate}', [PrintTemplateController::class, 'update']);
+        Route::delete('print-templates/{printTemplate}', [PrintTemplateController::class, 'destroy']);
     });
 });

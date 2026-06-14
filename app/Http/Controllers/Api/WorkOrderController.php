@@ -160,7 +160,7 @@ class WorkOrderController extends Controller
                 $workOrder->id,
                 $request->user()->employee_id ?? 0,
                 0,
-                \App\Models\InventoryLog::TYPE_OTHER_IN
+                \App\Models\InventoryLog::TYPE_PRODUCT_IN
             );
         }
 
