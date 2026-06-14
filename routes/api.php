@@ -9,11 +9,14 @@ use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\SalesOrderController;
 use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\PurchaseReceiveController;
+use App\Http\Controllers\Api\PurchaseReturnController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\SystemConfigController;
 use App\Http\Controllers\Api\PromotionController;
 use App\Http\Controllers\Api\FinanceController;
+use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\InventoryCheckController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\ReturnController;
@@ -61,6 +64,13 @@ Route::prefix('v1')->group(function () {
         Route::get('inventory/warning', [InventoryController::class, 'warning']);
         Route::get('inventory/stock', [InventoryController::class, 'stock']);
         Route::post('inventory/adjust', [InventoryController::class, 'adjust']);
+
+        // Inventory Check (盘点)
+        Route::get('inventory-checks', [InventoryCheckController::class, 'index']);
+        Route::post('inventory-checks', [InventoryCheckController::class, 'store']);
+        Route::get('inventory-checks/{check}', [InventoryCheckController::class, 'show']);
+        Route::put('inventory-checks/{check}/items', [InventoryCheckController::class, 'updateItems']);
+        Route::post('inventory-checks/{check}/approve', [InventoryCheckController::class, 'approve']);
         
         // Sales Orders
         Route::apiResource('sales-orders', SalesOrderController::class);
@@ -97,6 +107,13 @@ Route::prefix('v1')->group(function () {
         Route::get('purchase-receives', [PurchaseReceiveController::class, 'index']);
         Route::post('purchase-receives', [PurchaseReceiveController::class, 'store']);
         Route::get('purchase-receives/{receive}', [PurchaseReceiveController::class, 'show']);
+
+        // Purchase Return (QC - 质检退货)
+        Route::get('purchase-returns', [PurchaseReturnController::class, 'index']);
+        Route::post('purchase-returns', [PurchaseReturnController::class, 'store']);
+        Route::get('purchase-returns/{return}', [PurchaseReturnController::class, 'show']);
+        Route::post('purchase-returns/{return}/approve', [PurchaseReturnController::class, 'approve']);
+        Route::post('purchase-returns/{return}/receive', [PurchaseReturnController::class, 'receive']);
         
         // Promotions & Coupons
         Route::get('promotions', [PromotionController::class, 'index']);
@@ -115,7 +132,16 @@ Route::prefix('v1')->group(function () {
         Route::post('finance/payments', [FinanceController::class, 'createPayment']);
         Route::get('finance/accounts', [FinanceController::class, 'accounts']);
         Route::get('finance/statistics', [FinanceController::class, 'statistics']);
-        
+
+        // Invoices
+        Route::get('invoices', [InvoiceController::class, 'index']);
+        Route::post('invoices', [InvoiceController::class, 'store']);
+        Route::get('invoices/{invoice}', [InvoiceController::class, 'show']);
+        Route::post('invoices/{invoice}/issue', [InvoiceController::class, 'issue']);
+        Route::post('invoices/{invoice}/void', [InvoiceController::class, 'void']);
+        Route::post('invoices/{invoice}/match', [InvoiceController::class, 'addMatch']);
+        Route::get('invoices/statistics', [InvoiceController::class, 'statistics']);
+
         // Employee Management
         Route::get('employees', [EmployeeController::class, 'index']);
         Route::post('employees', [EmployeeController::class, 'store'])

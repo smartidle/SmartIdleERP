@@ -8,6 +8,8 @@ use App\Models\PurchaseReceiveItem;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\PurchaseReceiveItem as PRItem;
+use App\Models\PurchaseReturn;
+use App\Models\PurchaseReturnItem;
 use App\Models\Warehouse;
 use App\Services\InventoryService;
 use Illuminate\Http\Request;
@@ -76,14 +78,16 @@ class PurchaseReceiveController extends Controller
 
         // 创建收货明细
         $totalAmount = 0;
+        $defectiveItems = []; // 记录不合格品，后续自动创建退货单
         $inventoryService = app(InventoryService::class);
+
         foreach ($request->input('items') as $item) {
             $orderItem = PurchaseOrderItem::find($item['order_item_id']);
             $qualifiedQty = $item['qualified_qty'] ?? $item['quantity'];
             $defectiveQty = $item['defective_qty'] ?? 0;
             $amount = $orderItem->unit_price * $qualifiedQty;
 
-            PRItem::create([
+            $receiveItem = PRItem::create([
                 'receive_id' => $receive->id,
                 'order_item_id' => $item['order_item_id'],
                 'product_id' => $orderItem->product_id,
@@ -100,7 +104,7 @@ class PurchaseReceiveController extends Controller
             $orderItem->received_qty += $qualifiedQty;
             $orderItem->save();
 
-            // 采购入库 → 增加实际库存
+            // 采购入库 → 增加实际库存（只入库合格品）
             if ($qualifiedQty > 0) {
                 $inventoryService->addStock(
                     $orderItem->sku_id,
@@ -115,7 +119,52 @@ class PurchaseReceiveController extends Controller
                 );
             }
 
+            // 记录不合格品
+            if ($defectiveQty > 0) {
+                $defectiveItems[] = [
+                    'receive_item_id' => $receiveItem->id,
+                    'quantity' => $defectiveQty,
+                    'defect_reason' => $item['defect_reason'] ?? '质检不合格',
+                ];
+            }
+
             $totalAmount += $amount;
+        }
+
+        // 质检不合格 → 自动创建采购退货单
+        if (!empty($defectiveItems)) {
+            $returnNo = 'PRR' . date('Ymd') . str_pad(PurchaseReturn::count() + 1, 6, '0', STR_PAD_LEFT);
+            $return = PurchaseReturn::create([
+                'return_no' => $returnNo,
+                'receive_id' => $receive->id,
+                'order_id' => $order->id,
+                'supplier_id' => $order->supplier_id,
+                'reason' => '质检不合格',
+                'total_amount' => 0,
+                'status' => PurchaseReturn::STATUS_PENDING,
+                'remark' => '由收货单 ' . $receive->receive_no . ' 自动创建（' . count($defectiveItems) . ' 项不合格）',
+                'employee_id' => $request->user()->id,
+            ]);
+
+            $returnAmount = 0;
+            foreach ($defectiveItems as $defective) {
+                $ri = PurchaseReceiveItem::find($defective['receive_item_id']);
+                $riAmount = $ri->unit_price * $defective['quantity'];
+                PurchaseReturnItem::create([
+                    'return_id' => $return->id,
+                    'receive_item_id' => $defective['receive_item_id'],
+                    'product_id' => $ri->product_id,
+                    'sku_id' => $ri->sku_id,
+                    'quantity' => $defective['quantity'],
+                    'qualified_qty' => 0,
+                    'defective_qty' => $defective['quantity'],
+                    'unit_price' => $ri->unit_price,
+                    'amount' => $riAmount,
+                    'defect_reason' => $defective['defect_reason'],
+                ]);
+                $returnAmount += $riAmount;
+            }
+            $return->update(['total_amount' => $returnAmount]);
         }
 
         $receive->update(['total_amount' => $totalAmount]);

@@ -140,6 +140,9 @@
             <div class="sidebar-item" onclick="showModule('inventory')" data-perm="inventory.view">📈 Inventory</div>
             <div class="sidebar-item" onclick="showModule('finance')" data-perm="finance.view">💰 Finance</div>
             <div class="sidebar-item" onclick="showModule('employees')" data-perm="employee.view">👔 Employees</div>
+            <div class="sidebar-item" onclick="showModule('returns')" data-perm="purchase_order.view">📦 Returns</div>
+            <div class="sidebar-item" onclick="showModule('checks')" data-perm="inventory.view">🔍 Checks</div>
+            <div class="sidebar-item" onclick="showModule('invoices')" data-perm="finance.view">🧾 Invoices</div>
             <div class="sidebar-item" onclick="showModule('settings')" data-perm="system.config">⚙️ Settings</div>
         </div>
         <div class="content">
@@ -399,6 +402,95 @@
                     </div>
                     <table><thead><tr><th>Order No.</th><th>Supplier</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="purchaseOrdersTable"></tbody></table>
                     <div class="pagination" id="purchase-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== Purchase Returns ===== -->
+            <div id="module-returns" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">📦 Purchase Returns (质检退货)</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <div class="search-box" style="flex:1;max-width:300px;">
+                            <span>🔍</span>
+                            <input type="text" id="return-search" placeholder="Search return no..." oninput="filterReturns()">
+                        </div>
+                        <select class="filter-select" id="return-status-filter" onchange="filterReturns()">
+                            <option value="">All Status</option>
+                            <option value="1">Pending</option>
+                            <option value="2">Approved</option>
+                            <option value="3">Returned</option>
+                            <option value="4">Rejected</option>
+                        </select>
+                    </div>
+                    <table>
+                        <thead><tr><th>Return No.</th><th>Receive No.</th><th>Supplier</th><th>Amount</th><th>Reason</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                        <tbody id="returnsTable"></tbody>
+                    </table>
+                    <div class="pagination" id="returns-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== Inventory Checks ===== -->
+            <div id="module-checks" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">🔍 Inventory Checks (库存盘点)</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <div class="search-box" style="flex:1;max-width:300px;">
+                            <span>🔍</span>
+                            <input type="text" id="check-search" placeholder="Search check no..." oninput="filterChecks()">
+                        </div>
+                        <select class="filter-select" id="check-status-filter" onchange="filterChecks()">
+                            <option value="">All Status</option>
+                            <option value="1">In Progress</option>
+                            <option value="2">Pending Approval</option>
+                            <option value="3">Approved</option>
+                            <option value="4">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="toolbar-right">
+                        <button class="btn btn-primary" onclick="openCheckModal()">+ New Check</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Check No.</th><th>Warehouse</th><th>Date</th><th>Type</th><th>Status</th><th>Items</th><th>Diff</th><th>Actions</th></tr></thead>
+                        <tbody id="checksTable"></tbody>
+                    </table>
+                    <div class="pagination" id="checks-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== Invoices ===== -->
+            <div id="module-invoices" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">🧾 Invoices</h2>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <div class="search-box" style="flex:1;max-width:300px;">
+                            <span>🔍</span>
+                            <input type="text" id="invoice-search" placeholder="Search invoice no..." oninput="filterInvoices()">
+                        </div>
+                        <select class="filter-select" id="invoice-type-filter" onchange="filterInvoices()">
+                            <option value="">All Types</option>
+                            <option value="1">Sales Invoice</option>
+                            <option value="2">Purchase Invoice</option>
+                        </select>
+                        <select class="filter-select" id="invoice-status-filter" onchange="filterInvoices()">
+                            <option value="">All Status</option>
+                            <option value="1">Draft</option>
+                            <option value="2">Issued</option>
+                            <option value="3">Void</option>
+                        </select>
+                        <span style="font-size:12px;color:#888;">Date:</span>
+                        <input type="date" id="invoice-date-from" onchange="filterInvoices()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                        <span style="font-size:12px;color:#888;">To</span>
+                        <input type="date" id="invoice-date-to" onchange="filterInvoices()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                    </div>
+                    <div class="toolbar-right">
+                        <button class="btn btn-primary" onclick="openInvoiceModal()">+ New Invoice</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Invoice No.</th><th>Type</th><th>Party</th><th>Amount</th><th>Tax</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="invoicesTable"></tbody>
+                    </table>
+                    <div class="pagination" id="invoices-pagination"></div>
                 </div>
             </div>
 
@@ -1824,6 +1916,317 @@
             if (m === 'inventory') renderInventoryStats();
             if (m === 'finance') renderFinanceStats();
             if (m === 'employees') renderEmployeesStats();
+            if (m === 'returns') renderReturns();
+            if (m === 'checks') renderChecks();
+            if (m === 'invoices') renderInvoices();
+        }
+
+        // ===== Purchase Returns Module =====
+        let returnsData = [];
+
+        async function renderReturns() {
+            const res = await api('/api/v1/purchase-returns?per_page=100');
+            returnsData = res.data?.data || [];
+            filterReturns();
+        }
+
+        function filterReturns() {
+            const q = document.getElementById('return-search').value.toLowerCase();
+            const status = document.getElementById('return-status-filter').value;
+            const filtered = returnsData.filter(r => {
+                const matchQ = !q || (r.return_no || '').toLowerCase().includes(q) || (r.reason || '').toLowerCase().includes(q);
+                const matchS = !status || String(r.status) === status;
+                return matchQ && matchS;
+            });
+            document.getElementById('returnsTable').innerHTML = filtered.map(r => {
+                const statusMap = {1:'🟡 Pending',2:'🟢 Approved',3:'📦 Returned',4:'🔴 Rejected'};
+                return `<tr>
+                    <td>${r.return_no || '-'}</td>
+                    <td>${r.receive?.receive_no || '-'}</td>
+                    <td>${r.supplier?.name || (r.supplier_id ? 'Sup#'+r.supplier_id : '-')}</td>
+                    <td style="color:#ff4d4f;font-weight:600;">$${parseFloat(r.total_amount||0).toLocaleString()}</td>
+                    <td>${r.reason || '-'}</td>
+                    <td>${statusMap[r.status] || '-'}</td>
+                    <td>${r.created_at ? new Date(r.created_at).toLocaleDateString() : '-'}</td>
+                    <td>
+                        ${r.status === 1 ? `<button class="btn btn-sm btn-success" onclick="approveReturn(${r.id})">✅ Approve</button>` : ''}
+                        ${r.status === 2 ? `<button class="btn btn-sm btn-primary" onclick="receiveReturn(${r.id})">📥 Receive</button>` : ''}
+                        <button class="btn btn-sm" onclick="viewReturn(${r.id})">👁️ View</button>
+                    </td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="8" style="text-align:center;color:#999">No returns</td></tr>';
+        }
+
+        async function approveReturn(id) {
+            if (!confirm('Approve this return?')) return;
+            const res = await api(`/api/v1/purchase-returns/${id}/approve`, 'POST', {action:'approve'});
+            if (res.success) { alert('Approved'); renderReturns(); }
+            else alert('Error: ' + res.message);
+        }
+
+        async function receiveReturn(id) {
+            const res = await api(`/api/v1/purchase-returns/${id}/receive`, 'POST', {warehouse_id:1});
+            if (res.success) { alert('Return received, inventory updated'); renderReturns(); }
+            else alert('Error: ' + res.message);
+        }
+
+        async function viewReturn(id) {
+            const res = await api(`/api/v1/purchase-returns/${id}`);
+            if (res.success) {
+                const r = res.data;
+                const items = r.items || [];
+                let html = `<div style="padding:20px;max-width:700px;">
+                    <h3>Return #${r.return_no}</h3>
+                    <p><b>Status:</b> ${r.status}</p>
+                    <p><b>Reason:</b> ${r.reason}</p>
+                    <p><b>Total:</b> $${r.total_amount}</p>
+                    <h4>Items:</h4>
+                    <table style="width:100%"><thead><tr><th>Product</th><th>Defective Qty</th><th>Unit Price</th><th>Amount</th></tr></thead><tbody>`;
+                html += items.map(i => `<tr><td>${i.product?.name || i.product_id}</td><td>${i.defective_qty}</td><td>$${i.unit_price}</td><td>$${i.amount}</td></tr>`).join('');
+                html += '</tbody></table></div>';
+                document.getElementById('modal-body').innerHTML = html;
+                document.getElementById('modal-title').textContent = 'Return Details';
+                document.getElementById('generic-modal').classList.remove('hidden');
+            }
+        }
+
+        // ===== Inventory Checks Module =====
+        let checksData = [];
+
+        async function renderChecks() {
+            const res = await api('/api/v1/inventory-checks?per_page=100');
+            checksData = res.data?.data || [];
+            filterChecks();
+        }
+
+        function filterChecks() {
+            const q = document.getElementById('check-search').value.toLowerCase();
+            const status = document.getElementById('check-status-filter').value;
+            const filtered = checksData.filter(c => {
+                const matchQ = !q || (c.check_no || '').toLowerCase().includes(q);
+                const matchS = !status || String(c.status) === status;
+                return matchQ && matchS;
+            });
+            document.getElementById('checksTable').innerHTML = filtered.map(c => {
+                const statusMap = {1:'🔵 In Progress',2:'🟡 Pending',3:'🟢 Approved',4:'🔴 Rejected'};
+                const typeMap = {1:'Full',2:'Sample'};
+                const items = c.items || [];
+                const totalDiff = items.reduce((s,i) => s + (i.difference || 0), 0);
+                return `<tr>
+                    <td>${c.check_no || '-'}</td>
+                    <td>${c.warehouse?.name || (c.warehouse_id ? 'WH#'+c.warehouse_id : '-')}</td>
+                    <td>${c.check_date || '-'}</td>
+                    <td>${typeMap[c.type] || '-'}</td>
+                    <td>${statusMap[c.status] || '-'}</td>
+                    <td>${items.length}</td>
+                    <td style="color:${totalDiff > 0 ? '#52c41a' : totalDiff < 0 ? '#ff4d4f' : '#666'}">${totalDiff > 0 ? '+' : ''}${totalDiff}</td>
+                    <td>
+                        ${c.status === 1 ? `<button class="btn btn-sm btn-warning" onclick="openCheckEntryModal(${c.id})">✏️ Enter Qty</button>` : ''}
+                        ${c.status === 2 ? `<button class="btn btn-sm btn-success" onclick="approveCheck(${c.id})">✅ Approve</button>` : ''}
+                        <button class="btn btn-sm" onclick="viewCheck(${c.id})">👁️ View</button>
+                    </td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="8" style="text-align:center;color:#999">No checks</td></tr>';
+        }
+
+        function openCheckModal() {
+            document.getElementById('modal-title').textContent = 'New Inventory Check';
+            document.getElementById('modal-body').innerHTML = `<div style="padding:20px;">
+                <div class="form-group"><label>Warehouse</label><select id="check-warehouse" class="form-control"></select></div>
+                <div class="form-group"><label>Check Date</label><input type="date" id="check-date" class="form-control" value="${new Date().toISOString().substring(0,10)}"></div>
+                <div class="form-group"><label>Type</label><select id="check-type" class="form-control"><option value="1">Full Check (全盘)</option><option value="2">Sample Check (抽盘)</option></select></div>
+                <button class="btn btn-primary" onclick="createCheck()">Create Check</button>
+            </div>`;
+            document.getElementById('generic-modal').classList.remove('hidden');
+            // Load warehouses
+            (async () => {
+                const wh = await api('/api/v1/warehouses');
+                const opts = (wh.data?.data || []).map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+                document.getElementById('check-warehouse').innerHTML = opts;
+            })();
+        }
+
+        async function createCheck() {
+            const warehouse_id = document.getElementById('check-warehouse').value;
+            const check_date = document.getElementById('check-date').value;
+            const type = document.getElementById('check-type').value;
+            const res = await api('/api/v1/inventory-checks', 'POST', {warehouse_id, check_date, type});
+            if (res.success) { alert('Check created, items loaded'); document.getElementById('generic-modal').classList.add('hidden'); renderChecks(); }
+            else alert('Error: ' + res.message);
+        }
+
+        async function openCheckEntryModal(id) {
+            const res = await api(`/api/v1/inventory-checks/${id}`);
+            if (!res.success) return;
+            const c = res.data;
+            const items = c.items || [];
+            let html = `<div style="padding:20px;max-height:500px;overflow-y:auto;">
+                <h3>Check #${c.check_no} - Enter Actual Quantities</h3>
+                <table style="width:100%;font-size:13px;"><thead><tr><th>SKU</th><th>Product</th><th>System Qty</th><th>Actual Qty</th><th>Diff</th></tr></thead><tbody>`;
+            html += items.map(i => `<tr>
+                <td>${i.sku?.sku_code || i.sku_id}</td>
+                <td>${i.product?.name || i.product_id}</td>
+                <td>${i.system_qty}</td>
+                <td><input type="number" id="actual-qty-${i.id}" value="${i.actual_qty || 0}" min="0" step="0.001" style="width:80px;padding:4px;border:1px solid #ddd;border-radius:4px;" oninput="calcDiff(${i.id},${i.system_qty})"></td>
+                <td><span id="diff-${i.id}">${i.difference || 0}</span></td>
+            </tr>`).join('');
+            html += '</tbody></table><button class="btn btn-primary" onclick="submitCheckEntries(' + id + ')">Save & Submit</button></div>';
+            document.getElementById('modal-body').innerHTML = html;
+            document.getElementById('modal-title').textContent = 'Enter Actual Quantities';
+            document.getElementById('generic-modal').classList.remove('hidden');
+        }
+
+        function calcDiff(itemId, systemQty) {
+            const actual = parseFloat(document.getElementById('actual-qty-' + itemId).value || 0);
+            const diff = actual - systemQty;
+            document.getElementById('diff-' + itemId).textContent = diff > 0 ? '+' + diff : diff;
+            document.getElementById('diff-' + itemId).style.color = diff > 0 ? '#52c41a' : diff < 0 ? '#ff4d4f' : '#666';
+        }
+
+        async function submitCheckEntries(checkId) {
+            const items = document.querySelectorAll('[id^="actual-qty-"]');
+            const payload = {items: []};
+            items.forEach(inp => {
+                const itemId = parseInt(inp.id.replace('actual-qty-', ''));
+                payload.items.push({item_id: itemId, actual_qty: parseFloat(inp.value || 0)});
+            });
+            const res = await api(`/api/v1/inventory-checks/${checkId}/items`, 'PUT', payload);
+            if (res.success) { alert('Quantities saved'); document.getElementById('generic-modal').classList.add('hidden'); renderChecks(); }
+            else alert('Error: ' + res.message);
+        }
+
+        async function approveCheck(id) {
+            if (!confirm('Approve and adjust inventory?')) return;
+            const res = await api(`/api/v1/inventory-checks/${id}/approve`, 'POST', {action:'approve'});
+            if (res.success) { alert('Approved, inventory adjusted'); renderChecks(); }
+            else alert('Error: ' + res.message);
+        }
+
+        async function viewCheck(id) {
+            const res = await api(`/api/v1/inventory-checks/${id}`);
+            if (!res.success) return;
+            const c = res.data;
+            const items = c.items || [];
+            let html = `<div style="padding:20px;max-width:800px;">
+                <h3>Check #${c.check_no}</h3>
+                <p><b>Warehouse:</b> ${c.warehouse?.name || '-'} <b>Date:</b> ${c.check_date} <b>Status:</b> ${c.status}</p>
+                <table style="width:100%;font-size:13px;"><thead><tr><th>SKU</th><th>Product</th><th>System</th><th>Actual</th><th>Diff</th><th>Amount</th><th>Reason</th></tr></thead><tbody>`;
+            html += items.map(i => `<tr>
+                <td>${i.sku?.sku_code || i.sku_id}</td>
+                <td>${i.product?.name || i.product_id}</td>
+                <td>${i.system_qty}</td><td>${i.actual_qty}</td>
+                <td style="color:${i.difference > 0 ? '#52c41a' : i.difference < 0 ? '#ff4d4f' : '#666'}">${i.difference > 0 ? '+' : ''}${i.difference}</td>
+                <td>$${i.difference_amount || 0}</td>
+                <td>${i.reason || '-'}</td>
+            </tr>`).join('');
+            html += '</tbody></table></div>';
+            document.getElementById('modal-body').innerHTML = html;
+            document.getElementById('modal-title').textContent = 'Check Details';
+            document.getElementById('generic-modal').classList.remove('hidden');
+        }
+
+        // ===== Invoices Module =====
+        let invoicesData = [];
+
+        async function renderInvoices() {
+            const res = await api('/api/v1/invoices?per_page=100');
+            invoicesData = res.data?.data || [];
+            filterInvoices();
+        }
+
+        function filterInvoices() {
+            const q = document.getElementById('invoice-search').value.toLowerCase();
+            const type = document.getElementById('invoice-type-filter').value;
+            const status = document.getElementById('invoice-status-filter').value;
+            const dateFrom = document.getElementById('invoice-date-from').value;
+            const dateTo = document.getElementById('invoice-date-to').value;
+            const filtered = invoicesData.filter(i => {
+                const matchQ = !q || (i.invoice_no || '').toLowerCase().includes(q);
+                const matchT = !type || String(i.type) === type;
+                const matchS = !status || String(i.status) === status;
+                const dateStr = i.invoice_date || '';
+                const matchDF = !dateFrom || dateStr >= dateFrom;
+                const matchDT = !dateTo || dateStr <= dateTo;
+                return matchQ && matchT && matchS && matchDF && matchDT;
+            });
+            document.getElementById('invoicesTable').innerHTML = filtered.map(i => {
+                const typeMap = {1:'Sales',2:'Purchase'};
+                const statusMap = {1:'📝 Draft',2:'✅ Issued',3:'❌ Void'};
+                const party = i.type === 1 ? (i.customer?.name || (i.customer_id ? 'Cust#'+i.customer_id : '-')) : (i.supplier?.name || (i.supplier_id ? 'Sup#'+i.supplier_id : '-'));
+                return `<tr>
+                    <td>${i.invoice_no || '-'}</td>
+                    <td>${typeMap[i.type] || '-'}</td>
+                    <td>${party}</td>
+                    <td style="color:#52c41a;font-weight:600;">$${parseFloat(i.amount||0).toLocaleString()}</td>
+                    <td>$${parseFloat(i.tax_amount||0).toLocaleString()}</td>
+                    <td>${i.invoice_date || '-'}</td>
+                    <td>${statusMap[i.status] || '-'}</td>
+                    <td>
+                        ${i.status === 1 ? `<button class="btn btn-sm btn-success" onclick="issueInvoice(${i.id})">📤 Issue</button>
+                        <button class="btn btn-sm btn-danger" onclick="voidInvoice(${i.id})">❌ Void</button>` : ''}
+                        <button class="btn btn-sm" onclick="viewInvoice(${i.id})">👁️ View</button>
+                    </td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="8" style="text-align:center;color:#999">No invoices</td></tr>';
+        }
+
+        function openInvoiceModal() {
+            document.getElementById('modal-title').textContent = 'New Invoice';
+            document.getElementById('modal-body').innerHTML = `<div style="padding:20px;">
+                <div class="form-group"><label>Invoice No.</label><input type="text" id="inv-no" class="form-control" placeholder="INV-YYYYMMDD-XXX"></div>
+                <div class="form-group"><label>Type</label><select id="inv-type" class="form-control"><option value="1">Sales Invoice</option><option value="2">Purchase Invoice</option></select></div>
+                <div class="form-group"><label>Amount</label><input type="number" id="inv-amount" class="form-control" step="0.01"></div>
+                <div class="form-group"><label>Tax Amount</label><input type="number" id="inv-tax" class="form-control" step="0.01" value="0"></div>
+                <div class="form-group"><label>Invoice Date</label><input type="date" id="inv-date" class="form-control" value="${new Date().toISOString().substring(0,10)}"></div>
+                <div class="form-group"><label>Notes</label><textarea id="inv-notes" class="form-control"></textarea></div>
+                <button class="btn btn-primary" onclick="createInvoice()">Create Invoice</button>
+            </div>`;
+            document.getElementById('generic-modal').classList.remove('hidden');
+        }
+
+        async function createInvoice() {
+            const data = {
+                invoice_no: document.getElementById('inv-no').value,
+                type: document.getElementById('inv-type').value,
+                amount: document.getElementById('inv-amount').value,
+                tax_amount: document.getElementById('inv-tax').value,
+                invoice_date: document.getElementById('inv-date').value,
+                notes: document.getElementById('inv-notes').value,
+            };
+            if (!data.invoice_no || !data.amount) { alert('Please fill in invoice no. and amount'); return; }
+            const res = await api('/api/v1/invoices', 'POST', data);
+            if (res.success) { alert('Invoice created'); document.getElementById('generic-modal').classList.add('hidden'); renderInvoices(); }
+            else alert('Error: ' + res.message);
+        }
+
+        async function issueInvoice(id) {
+            const res = await api(`/api/v1/invoices/${id}/issue`, 'POST', {});
+            if (res.success) { alert('Invoice issued'); renderInvoices(); }
+            else alert('Error: ' + res.message);
+        }
+
+        async function voidInvoice(id) {
+            const reason = prompt('Please enter void reason:');
+            if (!reason) return;
+            const res = await api(`/api/v1/invoices/${id}/void`, 'POST', {reason});
+            if (res.success) { alert('Invoice voided'); renderInvoices(); }
+            else alert('Error: ' + res.message);
+        }
+
+        async function viewInvoice(id) {
+            const res = await api(`/api/v1/invoices/${id}`);
+            if (!res.success) return;
+            const i = res.data;
+            const matches = i.matches || [];
+            let html = `<div style="padding:20px;">
+                <h3>Invoice #${i.invoice_no}</h3>
+                <p><b>Type:</b> ${i.type === 1 ? 'Sales' : 'Purchase'} <b>Status:</b> ${i.status} <b>Amount:</b> $${i.amount} <b>Tax:</b> $${i.tax_amount}</p>
+                <p><b>Date:</b> ${i.invoice_date} <b>Notes:</b> ${i.notes || '-'}</p>
+                ${matches.length > 0 ? `<h4>Matched Records:</h4><ul>${matches.map(m => `<li>Order#${m.order_id} Receipt#${m.receipt_id} Payment#${m.payment_id} - $${m.amount}</li>`).join('')}</ul>` : ''}
+            </div>`;
+            document.getElementById('modal-body').innerHTML = html;
+            document.getElementById('modal-title').textContent = 'Invoice Details';
+            document.getElementById('generic-modal').classList.remove('hidden');
         }
 
         // Patch render functions to call after loadAll
