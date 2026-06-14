@@ -95,6 +95,23 @@
         .toast-success { background: #52c41a; }
         .toast-error { background: #ff4d4f; }
         @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        /* Notification styles */
+        .notification-panel { max-width: 1000px; }
+        .notification-filters { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+        .notification-list { max-height: 400px; overflow-y: auto; }
+        .notification-item { display: flex; padding: 12px 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s; }
+        .notification-item:hover { background: #fafafa; }
+        .notification-item.unread { background: #f0f7ff; }
+        .notification-item.unread:hover { background: #e6f0ff; }
+        .notification-item.read { opacity: 0.75; }
+        .notification-icon { font-size: 20px; margin-right: 12px; align-self: flex-start; padding-top: 2px; }
+        .notification-body { flex: 1; min-width: 0; }
+        .notification-title { font-weight: 600; font-size: 14px; color: #333; margin-bottom: 3px; }
+        .notification-text { font-size: 13px; color: #666; margin-bottom: 3px; line-height: 1.4; }
+        .notification-time { font-size: 11px; color: #999; }
+        .unread-dot { width: 8px; height: 8px; background: #667eea; border-radius: 50%; align-self: center; flex-shrink: 0; }
+        .empty-state { text-align: center; padding: 40px 0; color: #999; font-size: 14px; }
+        .empty-state .icon { font-size: 40px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -103,7 +120,11 @@
             <img id="headerLogo" src="/Logo.png" alt="Logo" onerror="this.style.display='none'">
             <h1 id="headerTitle">SmartIdle ERP</h1>
         </div>
-        <div>
+        <div style="display:flex;align-items:center;gap:15px;">
+            <div id="notification-icon" style="position:relative;cursor:pointer;font-size:20px;" title="Notifications">
+                🔔
+                <span id="notification-badge" style="display:none;position:absolute;top:-8px;right:-8px;background:#ff4d4f;color:white;border-radius:50%;min-width:18px;height:18px;font-size:10px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;font-weight:bold;"></span>
+            </div>
             <span id="userInfo" style="margin-right:15px;font-size:14px;">Welcome: Admin</span>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
@@ -116,6 +137,9 @@
             <div class="sidebar-item" onclick="showModule('suppliers')">🏭 Suppliers</div>
             <div class="sidebar-item" onclick="showModule('sales')">🛒 Sales Orders</div>
             <div class="sidebar-item" onclick="showModule('purchase')">📥 Purchase Orders</div>
+            <div class="sidebar-item" onclick="showModule('inventory')">📈 Inventory</div>
+            <div class="sidebar-item" onclick="showModule('finance')">💰 Finance</div>
+            <div class="sidebar-item" onclick="showModule('employees')">👔 Employees</div>
             <div class="sidebar-item" onclick="showModule('settings')">⚙️ Settings</div>
         </div>
         <div class="content">
@@ -166,6 +190,20 @@
                                 <option value="1">Active</option>
                                 <option value="0">Inactive</option>
                             </select>
+                            <select id="product-category-filter" onchange="filterProducts()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Categories</option>
+                            </select>
+                            <select id="product-brand-filter" onchange="filterProducts()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Brands</option>
+                            </select>
+                            <span style="font-size:12px;color:#888;">Cost $:</span>
+                            <input type="number" id="product-cost-from" placeholder="Min" onchange="filterProducts()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:75px;">
+                            <span style="font-size:12px;color:#888;">-</span>
+                            <input type="number" id="product-cost-to" placeholder="Max" onchange="filterProducts()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:75px;">
+                            <span style="font-size:12px;color:#888;">Whole $:</span>
+                            <input type="number" id="product-wholesale-from" placeholder="Min" onchange="filterProducts()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:75px;">
+                            <span style="font-size:12px;color:#888;">-</span>
+                            <input type="number" id="product-wholesale-to" placeholder="Max" onchange="filterProducts()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:75px;">
                         </div>
                         <div class="toolbar-right">
                             <button class="btn btn-primary" onclick="openProductModal()">+ Add Product</button>
@@ -187,6 +225,7 @@
                                 <span>🔍</span>
                                 <input type="text" id="customer-search" placeholder="Search customers..." oninput="filterCustomers()">
                             </div>
+                            <input type="text" id="customer-email-filter" placeholder="Email..." oninput="filterCustomers()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;outline:none;">
                             <select class="filter-select" id="customer-level-filter" onchange="filterCustomers()">
                                 <option value="">All Levels</option>
                                 <option value="VIP">VIP</option>
@@ -194,6 +233,19 @@
                                 <option value="Silver">Silver</option>
                                 <option value="Normal">Normal</option>
                             </select>
+                            <select id="customer-country-filter" onchange="filterCustomers()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Countries</option>
+                            </select>
+                            <select id="customer-city-filter" onchange="filterCustomers()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Cities</option>
+                            </select>
+                            <select id="customer-source-filter" onchange="filterCustomers()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Sources</option>
+                            </select>
+                            <span style="font-size:12px;color:#888;">Credit $:</span>
+                            <input type="number" id="customer-credit-from" placeholder="Min" onchange="filterCustomers()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:75px;">
+                            <span style="font-size:12px;color:#888;">-</span>
+                            <input type="number" id="customer-credit-to" placeholder="Max" onchange="filterCustomers()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:75px;">
                             <select class="filter-select" id="customer-status-filter" onchange="filterCustomers()">
                                 <option value="">All Status</option>
                                 <option value="1">Active</option>
@@ -220,6 +272,34 @@
                                 <span>🔍</span>
                                 <input type="text" id="supplier-search" placeholder="Search suppliers..." oninput="filterSuppliers()">
                             </div>
+                            <select id="supplier-country-filter" onchange="filterSuppliers()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Countries</option>
+                            </select>
+                            <select id="supplier-city-filter" onchange="filterSuppliers()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Cities</option>
+                            </select>
+                            <select id="supplier-rating-filter" onchange="filterSuppliers()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Ratings</option>
+                                <option value="5">⭐⭐⭐⭐⭐</option>
+                                <option value="4">⭐⭐⭐⭐</option>
+                                <option value="3">⭐⭐⭐</option>
+                                <option value="2">⭐⭐</option>
+                                <option value="1">⭐</option>
+                            </select>
+                            <select id="supplier-coop-filter" onchange="filterSuppliers()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Cooperation</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            <select id="supplier-terms-filter" onchange="filterSuppliers()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Payment Terms</option>
+                                <option value="1">Prepaid</option>
+                                <option value="2">Net 30</option>
+                                <option value="3">Net 60</option>
+                                <option value="4">Net 90</option>
+                            </select>
+                            <span style="font-size:12px;color:#888;">Lead ≤</span>
+                            <input type="number" id="supplier-lead-max" placeholder="Days" onchange="filterSuppliers()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:65px;">
                             <select class="filter-select" id="supplier-status-filter" onchange="filterSuppliers()">
                                 <option value="">All Status</option>
                                 <option value="1">Active</option>
@@ -246,6 +326,19 @@
                                 <span>🔍</span>
                                 <input type="text" id="sales-search" placeholder="Search orders..." oninput="filterSales()">
                             </div>
+                            <select id="sales-customer-filter" onchange="filterSales()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Customers</option>
+                            </select>
+                            <select id="sales-payment-filter" onchange="filterSales()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Payment</option>
+                                <option value="paid">Paid</option>
+                                <option value="partial">Partial</option>
+                                <option value="unpaid">Unpaid</option>
+                            </select>
+                            <span style="font-size:12px;color:#888;">Date:</span>
+                            <input type="date" id="sales-date-from" onchange="filterSales()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                            <span style="font-size:12px;color:#888;">To</span>
+                            <input type="date" id="sales-date-to" onchange="filterSales()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
                             <select class="filter-select" id="sales-status-filter" onchange="filterSales()">
                                 <option value="">All Status</option>
                                 <option value="0">Draft</option>
@@ -277,6 +370,19 @@
                                 <span>🔍</span>
                                 <input type="text" id="purchase-search" placeholder="Search orders..." oninput="filterPurchase()">
                             </div>
+                            <select id="purchase-supplier-filter" onchange="filterPurchase()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Suppliers</option>
+                            </select>
+                            <select id="purchase-payment-filter" onchange="filterPurchase()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Payment</option>
+                                <option value="paid">Paid</option>
+                                <option value="partial">Partial</option>
+                                <option value="unpaid">Unpaid</option>
+                            </select>
+                            <span style="font-size:12px;color:#888;">Date:</span>
+                            <input type="date" id="purchase-date-from" onchange="filterPurchase()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                            <span style="font-size:12px;color:#888;">To</span>
+                            <input type="date" id="purchase-date-to" onchange="filterPurchase()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
                             <select class="filter-select" id="purchase-status-filter" onchange="filterPurchase()">
                                 <option value="">All Status</option>
                                 <option value="0">Draft</option>
@@ -326,6 +432,121 @@
                         <small style="color:#999">Current: <span id="setting-login-current">-</span></small>
                     </div>
                     <button onclick="saveSettings()" class="btn btn-success">💾 Save Settings</button>
+                </div>
+            </div>
+
+            <!-- ===== Inventory ===== -->
+            <div id="module-inventory" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">📈 Inventory</h2>
+                <div class="module-stats" id="inventory-stats"></div>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <div class="toolbar-left">
+                            <div class="search-box">
+                                <span>🔍</span>
+                                <input type="text" id="inventory-search" placeholder="Search products..." oninput="filterInventory()">
+                            </div>
+                            <select id="inv-category-filter" onchange="filterInventory()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Categories</option>
+                            </select>
+                            <select id="inv-brand-filter" onchange="filterInventory()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Brands</option>
+                            </select>
+                            <select id="inv-stock-level-filter" onchange="filterInventory()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Stock Levels</option>
+                                <option value="low">Low Stock</option>
+                                <option value="normal">Normal</option>
+                                <option value="overstock">Overstock</option>
+                            </select>
+                            <span style="font-size:12px;color:#888;">Cost $:</span>
+                            <input type="number" id="inv-cost-from" placeholder="Min" onchange="filterInventory()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:75px;">
+                            <span style="font-size:12px;color:#888;">-</span>
+                            <input type="number" id="inv-cost-to" placeholder="Max" onchange="filterInventory()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:75px;">
+                            <span style="font-size:12px;color:#888;">Sale $:</span>
+                            <input type="number" id="inv-sale-from" placeholder="Min" onchange="filterInventory()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:75px;">
+                            <span style="font-size:12px;color:#888;">-</span>
+                            <input type="number" id="inv-sale-to" placeholder="Max" onchange="filterInventory()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:75px;">
+                        </div>
+                    </div>
+                    <table><thead><tr><th>ID</th><th>Product</th><th>Category</th><th>SKU Code</th><th>Cost Price</th><th>Sale Price</th><th>Brand</th><th>Status</th></tr></thead><tbody id="allInventoryTable"></tbody></table>
+                    <div class="pagination" id="inventory-pagination"></div>
+                </div>
+            </div>
+
+            <!-- ===== Finance ===== -->
+            <div id="module-finance" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">💰 Finance</h2>
+                <div class="module-stats" id="finance-stats"></div>
+                <div class="data-table">
+                    <div class="toolbar" style="margin-bottom:15px;">
+                        <span class="filter-label">Receipts</span>
+                        <div class="search-box" style="flex:1;max-width:300px;">
+                            <span>🔍</span>
+                            <input type="text" id="finance-search" placeholder="Search receipts..." oninput="filterFinance()">
+                        </div>
+                        <select id="finance-type-filter" onchange="filterFinance()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                            <option value="">All Types</option>
+                            <option value="1">Sales</option>
+                            <option value="2">Advance</option>
+                            <option value="3">Refund</option>
+                            <option value="9">Other</option>
+                        </select>
+                        <span style="font-size:12px;color:#888;">Date:</span>
+                        <input type="date" id="finance-rec-from" onchange="filterFinance()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                        <span style="font-size:12px;color:#888;">To</span>
+                        <input type="date" id="finance-rec-to" onchange="filterFinance()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                        <span style="font-size:12px;color:#888;">Amt $:</span>
+                        <input type="number" id="finance-amt-from" placeholder="Min" onchange="filterFinance()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:75px;">
+                        <span style="font-size:12px;color:#888;">-</span>
+                        <input type="number" id="finance-amt-to" placeholder="Max" onchange="filterFinance()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:75px;">
+                        <select id="finance-method-filter" onchange="filterFinance()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                            <option value="">All Methods</option>
+                            <option value="wire">Wire Transfer</option>
+                            <option value="alipay">Alipay</option>
+                            <option value="wechat">WeChat Pay</option>
+                            <option value="paypal">PayPal</option>
+                            <option value="cash">Cash</option>
+                        </select>
+                    </div>
+                    <div class="data-table">
+                        <h3 style="font-size:14px;color:#666;margin-bottom:10px;">💵 Recent Receipts</h3>
+                        <table><thead><tr><th>ID</th><th>Date</th><th>Type</th><th>Amount</th><th>Account</th><th>Status</th></tr></thead><tbody id="financeReceiptsTable"></tbody></table>
+                    </div>
+                    <div class="data-table" style="margin-top:20px;">
+                        <h3 style="font-size:14px;color:#666;margin-bottom:10px;">💸 Recent Payments</h3>
+                        <table><thead><tr><th>ID</th><th>Date</th><th>Type</th><th>Amount</th><th>Account</th><th>Status</th></tr></thead><tbody id="financePaymentsTable"></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Employees ===== -->
+            <div id="module-employees" class="module-content hidden">
+                <h2 style="margin-bottom:20px;">👔 Employees</h2>
+                <div class="module-stats" id="employees-stats"></div>
+                <div class="data-table">
+                    <div class="toolbar">
+                        <div class="toolbar-left">
+                            <div class="search-box">
+                                <span>🔍</span>
+                                <input type="text" id="employee-search" placeholder="Search employees..." oninput="filterEmployees()">
+                            </div>
+                            <input type="text" id="emp-email-filter" placeholder="Email..." oninput="filterEmployees()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;outline:none;">
+                            <select id="emp-dept-filter" onchange="filterEmployees()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Departments</option>
+                            </select>
+                            <select id="emp-role-filter" onchange="filterEmployees()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;outline:none;cursor:pointer;">
+                                <option value="">All Roles</option>
+                            </select>
+                            <input type="text" id="emp-position-filter" placeholder="Position..." oninput="filterEmployees()" style="padding:7px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;outline:none;">
+                            <select class="filter-select" id="employee-status-filter" onchange="filterEmployees()">
+                                <option value="">All Status</option>
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <table><thead><tr><th>ID</th><th>Code</th><th>Name</th><th>Email</th><th>Department</th><th>Position</th><th>Role</th><th>Status</th></tr></thead><tbody id="allEmployeesTable"></tbody></table>
+                    <div class="pagination" id="employees-pagination"></div>
                 </div>
             </div>
         </div>
@@ -419,18 +640,22 @@
         // Load all data
         async function loadAll() {
             try {
-                const [products, customers, suppliers, sales, purchase] = await Promise.all([
+                const [products, customers, suppliers, sales, purchase, employees, categories] = await Promise.all([
                     api('/api/v1/products'),
                     api('/api/v1/customers'),
                     api('/api/v1/suppliers'),
                     api('/api/v1/sales-orders'),
-                    api('/api/v1/purchase-orders')
+                    api('/api/v1/purchase-orders'),
+                    api('/api/v1/employees'),
+                    api('/api/v1/categories')
                 ]);
                 appData.products = products.data?.data || products.data || [];
                 appData.customers = customers.data?.data || customers.data || [];
                 appData.suppliers = suppliers.data?.data || suppliers.data || [];
                 appData.salesOrders = sales.data?.data || sales.data || [];
                 appData.purchaseOrders = purchase.data?.data || purchase.data || [];
+                appData.employees = employees.data?.data || employees.data || [];
+                appData.categories = categories.data?.data || categories.data || [];
 
                 // Stats
                 document.getElementById('stat-products').textContent = appData.products.length;
@@ -444,6 +669,16 @@
                 renderSuppliers(appData.suppliers);
                 renderSalesOrders(appData.salesOrders);
                 renderPurchaseOrders(appData.purchaseOrders);
+
+                // Populate dynamic filter dropdowns
+                populateProductFilters();
+                populateCustomerFilters();
+                populateSupplierFilters();
+                populateSalesFilters();
+                populatePurchaseFilters();
+                populateInventoryFilters();
+                populateEmployeeFilters();
+
                 loadSettings();
             } catch (e) { console.error(e); }
         }
@@ -472,12 +707,32 @@
         function filterProducts() {
             const q = document.getElementById('product-search').value.toLowerCase();
             const status = document.getElementById('product-status-filter').value;
+            const category = document.getElementById('product-category-filter').value;
+            const brand = document.getElementById('product-brand-filter').value;
+            const costFrom = document.getElementById('product-cost-from').value;
+            const costTo = document.getElementById('product-cost-to').value;
+            const wholeFrom = document.getElementById('product-wholesale-from').value;
+            const wholeTo = document.getElementById('product-wholesale-to').value;
             const filtered = appData.products.filter(p => {
                 const matchQ = !q || (p.name || '').toLowerCase().includes(q) || (p.sku_prefix || '').toLowerCase().includes(q);
                 const matchS = !status || String(p.status) === status;
-                return matchQ && matchS;
+                const matchC = !category || String(p.category_id) === category;
+                const matchB = !brand || (p.brand || '') === brand;
+                const matchCostFrom = !costFrom || parseFloat(p.base_cost_price || 0) >= parseFloat(costFrom);
+                const matchCostTo = !costTo || parseFloat(p.base_cost_price || 0) <= parseFloat(costTo);
+                const matchWholeFrom = !wholeFrom || parseFloat(p.base_wholesale_price || 0) >= parseFloat(wholeFrom);
+                const matchWholeTo = !wholeTo || parseFloat(p.base_wholesale_price || 0) <= parseFloat(wholeTo);
+                return matchQ && matchS && matchC && matchB && matchCostFrom && matchCostTo && matchWholeFrom && matchWholeTo;
             });
             renderProducts(filtered);
+        }
+
+        function populateProductFilters() {
+            const cats = [...new Set(appData.categories.map(c => c.id + '|' + c.name).filter(Boolean))].sort()
+                .map(x => { const [id, name] = x.split('|'); return { id, name }; });
+            const brands = [...new Set(appData.products.map(p => p.brand).filter(Boolean))].sort();
+            document.getElementById('product-category-filter').innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            document.getElementById('product-brand-filter').innerHTML = '<option value="">All Brands</option>' + brands.map(b => `<option value="${b}">${b}</option>`).join('');
         }
 
         async function openProductModal(id = null) {
@@ -554,15 +809,36 @@
 
         function filterCustomers() {
             const q = document.getElementById('customer-search').value.toLowerCase();
+            const email = document.getElementById('customer-email-filter').value.toLowerCase();
             const level = document.getElementById('customer-level-filter').value;
+            const country = document.getElementById('customer-country-filter').value;
+            const city = document.getElementById('customer-city-filter').value;
+            const source = document.getElementById('customer-source-filter').value;
+            const creditFrom = document.getElementById('customer-credit-from').value;
+            const creditTo = document.getElementById('customer-credit-to').value;
             const status = document.getElementById('customer-status-filter').value;
             const filtered = appData.customers.filter(c => {
                 const matchQ = !q || (c.name || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q) || (c.contact_person || '').toLowerCase().includes(q);
-                const matchL = !level || c.level === level;
+                const matchE = !email || (c.email || '').toLowerCase().includes(email);
+                const matchL = !level || String(c.level) === level;
+                const matchCo = !country || (c.country || '') === country;
+                const matchCi = !city || (c.city || '') === city;
+                const matchSo = !source || (c.source || '') === source;
+                const matchCrF = !creditFrom || parseFloat(c.credit_limit || 0) >= parseFloat(creditFrom);
+                const matchCrT = !creditTo || parseFloat(c.credit_limit || 0) <= parseFloat(creditTo);
                 const matchS = !status || String(c.status) === status;
-                return matchQ && matchL && matchS;
+                return matchQ && matchE && matchL && matchCo && matchCi && matchSo && matchCrF && matchCrT && matchS;
             });
             renderCustomers(filtered);
+        }
+
+        function populateCustomerFilters() {
+            const countries = [...new Set(appData.customers.map(c => c.country).filter(Boolean))].sort();
+            const cities = [...new Set(appData.customers.map(c => c.city).filter(Boolean))].sort();
+            const sources = [...new Set(appData.customers.map(c => c.source).filter(Boolean))].sort();
+            document.getElementById('customer-country-filter').innerHTML = '<option value="">All Countries</option>' + countries.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('customer-city-filter').innerHTML = '<option value="">All Cities</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('customer-source-filter').innerHTML = '<option value="">All Sources</option>' + sources.map(s => `<option value="${s}">${s}</option>`).join('');
         }
 
         async function openCustomerModal(id = null) {
@@ -638,13 +914,32 @@
 
         function filterSuppliers() {
             const q = document.getElementById('supplier-search').value.toLowerCase();
+            const country = document.getElementById('supplier-country-filter').value;
+            const city = document.getElementById('supplier-city-filter').value;
+            const rating = document.getElementById('supplier-rating-filter').value;
+            const coop = document.getElementById('supplier-coop-filter').value;
+            const terms = document.getElementById('supplier-terms-filter').value;
+            const leadMax = document.getElementById('supplier-lead-max').value;
             const status = document.getElementById('supplier-status-filter').value;
             const filtered = appData.suppliers.filter(s => {
                 const matchQ = !q || (s.name || '').toLowerCase().includes(q) || (s.email || '').toLowerCase().includes(q) || (s.contact_person || '').toLowerCase().includes(q);
+                const matchC = !country || (s.country || '') === country;
+                const matchCi = !city || (s.city || '') === city;
+                const matchR = !rating || String(s.rating) === rating;
+                const matchCoop = !coop || (coop === 'active' && s.status == 1) || (coop === 'inactive' && s.status == 0);
+                const matchT = !terms || String(s.payment_terms) === terms;
+                const matchL = !leadMax || (s.lead_time || 0) <= parseInt(leadMax);
                 const matchS = !status || String(s.status) === status;
-                return matchQ && matchS;
+                return matchQ && matchC && matchCi && matchR && matchCoop && matchT && matchL && matchS;
             });
             renderSuppliers(filtered);
+        }
+
+        function populateSupplierFilters() {
+            const countries = [...new Set(appData.suppliers.map(s => s.country).filter(Boolean))].sort();
+            const cities = [...new Set(appData.suppliers.map(s => s.city).filter(Boolean))].sort();
+            document.getElementById('supplier-country-filter').innerHTML = '<option value="">All Countries</option>' + countries.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('supplier-city-filter').innerHTML = '<option value="">All Cities</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
         }
 
         async function openSupplierModal(id = null) {
@@ -720,13 +1015,27 @@
 
         function filterSales() {
             const q = document.getElementById('sales-search').value.toLowerCase();
+            const customer = document.getElementById('sales-customer-filter').value;
+            const payment = document.getElementById('sales-payment-filter').value;
+            const dateFrom = document.getElementById('sales-date-from').value;
+            const dateTo = document.getElementById('sales-date-to').value;
             const status = document.getElementById('sales-status-filter').value;
             const filtered = appData.salesOrders.filter(o => {
                 const matchQ = !q || (o.order_no || '').toLowerCase().includes(q);
+                const matchC = !customer || String(o.customer_id) === customer;
+                const paymentMap = { 'unpaid': 0, 'partial': 1, 'paid': 2 };
+                const matchP = !payment || String(o.payment_status) === payment || String(paymentMap[payment]) === String(o.payment_status);
+                const matchDF = !dateFrom || (o.order_date && o.order_date.substring(0, 10) >= dateFrom);
+                const matchDT = !dateTo || (o.order_date && o.order_date.substring(0, 10) <= dateTo);
                 const matchS = !status || String(o.status) === status;
-                return matchQ && matchS;
+                return matchQ && matchC && matchP && matchDF && matchDT && matchS;
             });
             renderSalesOrders(filtered);
+        }
+
+        function populateSalesFilters() {
+            const customers = appData.customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            document.getElementById('sales-customer-filter').innerHTML = '<option value="">All Customers</option>' + customers;
         }
 
         async function openSalesModal() {
@@ -818,13 +1127,27 @@
 
         function filterPurchase() {
             const q = document.getElementById('purchase-search').value.toLowerCase();
+            const supplier = document.getElementById('purchase-supplier-filter').value;
+            const payment = document.getElementById('purchase-payment-filter').value;
+            const dateFrom = document.getElementById('purchase-date-from').value;
+            const dateTo = document.getElementById('purchase-date-to').value;
             const status = document.getElementById('purchase-status-filter').value;
+            const paymentMap = { 'unpaid': 0, 'partial': 1, 'paid': 2 };
             const filtered = appData.purchaseOrders.filter(o => {
                 const matchQ = !q || (o.order_no || '').toLowerCase().includes(q) || (o.supplier?.name || '').toLowerCase().includes(q);
-                const matchS = !status || String(o.status) === status;
-                return matchQ && matchS;
+                const matchS = !supplier || String(o.supplier_id || o.supplier?.id) === supplier;
+                const matchP = !payment || String(o.payment_status) === payment || String(paymentMap[payment]) === String(o.payment_status);
+                const matchDF = !dateFrom || (o.order_date && o.order_date.substring(0, 10) >= dateFrom);
+                const matchDT = !dateTo || (o.order_date && o.order_date.substring(0, 10) <= dateTo);
+                const matchSt = !status || String(o.status) === status;
+                return matchQ && matchS && matchP && matchDF && matchDT && matchSt;
             });
             renderPurchaseOrders(filtered);
+        }
+
+        function populatePurchaseFilters() {
+            const suppliers = appData.suppliers.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            document.getElementById('purchase-supplier-filter').innerHTML = '<option value="">All Suppliers</option>' + suppliers;
         }
 
         async function openPurchaseModal() {
@@ -1096,6 +1419,281 @@
             `;
         }
 
+        // ===== Inventory =====
+        let inventoryData = [];
+        async function renderInventoryStats() {
+            const data = await api('/api/v1/inventory');
+            const products = data.data?.data || [];
+            inventoryData = products;
+
+            const total = products.length;
+            const skus = products.reduce((s, p) => s + (p.skus?.length || 0), 0);
+            const activeProducts = products.filter(p => p.status == 1).length;
+            const categories = [...new Set(products.map(p => p.category?.name).filter(Boolean))].length;
+
+            document.getElementById('inventory-stats').innerHTML = `
+                <div class="module-stat-card blue">
+                    <div class="stat-label">Total Products</div>
+                    <div class="stat-value">${total}</div>
+                </div>
+                <div class="module-stat-card green">
+                    <div class="stat-label">Total SKUs</div>
+                    <div class="stat-value">${skus}</div>
+                </div>
+                <div class="module-stat-card teal">
+                    <div class="stat-label">Active Products</div>
+                    <div class="stat-value">${activeProducts}</div>
+                </div>
+                <div class="module-stat-card purple">
+                    <div class="stat-label">Categories</div>
+                    <div class="stat-value">${categories}</div>
+                </div>
+            `;
+
+            populateInventoryFilters();
+            filterInventory();
+        }
+
+        function populateInventoryFilters() {
+            const cats = [...new Set(appData.categories.map(c => c.id + '|' + c.name).filter(Boolean))].sort()
+                .map(x => { const [id, name] = x.split('|'); return { id, name }; });
+            const brands = [...new Set(inventoryData.map(p => p.brand).filter(Boolean))].sort();
+            document.getElementById('inv-category-filter').innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            document.getElementById('inv-brand-filter').innerHTML = '<option value="">All Brands</option>' + brands.map(b => `<option value="${b}">${b}</option>`).join('');
+        }
+
+        function filterInventory() {
+            const q = document.getElementById('inventory-search').value.toLowerCase();
+            const category = document.getElementById('inv-category-filter').value;
+            const brand = document.getElementById('inv-brand-filter').value;
+            const stockLevel = document.getElementById('inv-stock-level-filter').value;
+            const costFrom = document.getElementById('inv-cost-from').value;
+            const costTo = document.getElementById('inv-cost-to').value;
+            const saleFrom = document.getElementById('inv-sale-from').value;
+            const saleTo = document.getElementById('inv-sale-to').value;
+
+            const filtered = inventoryData.filter(p => {
+                const matchQ = !q || (p.name || '').toLowerCase().includes(q) || (p.brand || '').toLowerCase().includes(q);
+                const matchC = !category || String(p.category_id) === category;
+                const matchB = !brand || (p.brand || '') === brand;
+                const matchCostFrom = !costFrom || parseFloat(p.base_cost_price || 0) >= parseFloat(costFrom);
+                const matchCostTo = !costTo || parseFloat(p.base_cost_price || 0) <= parseFloat(costTo);
+                const matchSaleFrom = !saleFrom || parseFloat(p.base_sale_price || 0) >= parseFloat(saleFrom);
+                const matchSaleTo = !saleTo || parseFloat(p.base_sale_price || 0) <= parseFloat(saleTo);
+                // Stock level: low (current < min_stock), normal (min <= current <= max), overstock (current > max_stock)
+                let matchStock = true;
+                if (stockLevel === 'low') matchStock = p.current_stock !== undefined && p.min_stock !== undefined && p.current_stock < p.min_stock;
+                else if (stockLevel === 'overstock') matchStock = p.current_stock !== undefined && p.max_stock !== undefined && p.current_stock > p.max_stock;
+                else if (stockLevel === 'normal') matchStock = (p.current_stock === undefined || p.min_stock === undefined || (p.current_stock >= p.min_stock && (p.max_stock === undefined || p.current_stock <= p.max_stock)));
+                return matchQ && matchC && matchB && matchCostFrom && matchCostTo && matchSaleFrom && matchSaleTo && matchStock;
+            });
+
+            // Build flat SKU rows
+            const rows = [];
+            filtered.forEach(p => {
+                if (p.skus && p.skus.length > 0) {
+                    p.skus.forEach(s => {
+                        rows.push({ ...s, product: p });
+                    });
+                } else {
+                    rows.push({ id: '-', sku_code: '-', product: p });
+                }
+            });
+
+            document.getElementById('allInventoryTable').innerHTML = rows.map(r => `
+                <tr>
+                    <td>${r.product.id}</td>
+                    <td>${r.product.name || '-'}</td>
+                    <td>${r.product.category?.name || '-'}</td>
+                    <td>${r.sku_code || '-'}</td>
+                    <td>$${parseFloat(r.cost_price || 0).toFixed(2)}</td>
+                    <td>$${parseFloat(r.sale_price || 0).toFixed(2)}</td>
+                    <td>${r.product.brand || '-'}</td>
+                    <td><span class="badge badge-${r.status == 1 ? 'success' : 'danger'}">${r.status == 1 ? 'Active' : 'Inactive'}</span></td>
+                </tr>
+            `).join('') || '<tr><td colspan="8" style="text-align:center;color:#999">No inventory data</td></tr>';
+        }
+
+        // ===== Finance =====
+        let financeReceiptsData = [];
+        let financePaymentsData = [];
+        async function renderFinanceStats() {
+            const stat = await api('/api/v1/finance/statistics');
+            const d = stat.data || {};
+
+            document.getElementById('finance-stats').innerHTML = `
+                <div class="module-stat-card green">
+                    <div class="stat-label">Total Receipts</div>
+                    <div class="stat-value">$${(d.total_receipt || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                </div>
+                <div class="module-stat-card red">
+                    <div class="stat-label">Total Payments</div>
+                    <div class="stat-value">$${(d.total_payment || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                </div>
+                <div class="module-stat-card teal">
+                    <div class="stat-label">Net Profit</div>
+                    <div class="stat-value">$${(d.net_profit || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                </div>
+                <div class="module-stat-card orange">
+                    <div class="stat-label">Receivable</div>
+                    <div class="stat-value">$${(d.receivable || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                </div>
+                <div class="module-stat-card purple">
+                    <div class="stat-label">Payable</div>
+                    <div class="stat-value">$${(d.payable || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                </div>
+            `;
+
+            // Load receipts
+            const [recData, payData] = await Promise.all([
+                api('/api/v1/finance/receipts'),
+                api('/api/v1/finance/payments')
+            ]);
+
+            financeReceiptsData = recData.data?.data || recData.data || [];
+            financePaymentsData = payData.data?.data || payData.data || [];
+
+            filterFinance();
+        }
+
+        function filterFinance() {
+            const q = document.getElementById('finance-search').value.toLowerCase();
+            const type = document.getElementById('finance-type-filter').value;
+            const dateFrom = document.getElementById('finance-rec-from').value;
+            const dateTo = document.getElementById('finance-rec-to').value;
+            const amtFrom = document.getElementById('finance-amt-from').value;
+            const amtTo = document.getElementById('finance-amt-to').value;
+            const method = document.getElementById('finance-method-filter').value;
+
+            // Filter receipts
+            const filteredReceipts = financeReceiptsData.filter(r => {
+                const matchQ = !q || (r.receipt_no || '').toLowerCase().includes(q) || (r.account_name || '').toLowerCase().includes(q);
+                const matchT = !type || String(r.receipt_type) === type;
+                const dateStr = r.payment_date ? new Date(r.payment_date).toISOString().substring(0, 10) : '';
+                const matchDF = !dateFrom || dateStr >= dateFrom;
+                const matchDT = !dateTo || dateStr <= dateTo;
+                const matchAmtF = !amtFrom || parseFloat(r.amount || 0) >= parseFloat(amtFrom);
+                const matchAmtT = !amtTo || parseFloat(r.amount || 0) <= parseFloat(amtTo);
+                const matchM = !method || (r.payment_method || '').toLowerCase().includes(method);
+                return matchQ && matchT && matchDF && matchDT && matchAmtF && matchAmtT && matchM;
+            });
+
+            document.getElementById('financeReceiptsTable').innerHTML = filteredReceipts.slice(0, 10).map(r => {
+                const typeMap = {1:'Sales',2:'Advance',3:'Refund',9:'Other'};
+                const dateStr = r.payment_date ? new Date(r.payment_date).toLocaleDateString('en-US',{year:'numeric',month:'2-digit',day:'2-digit'}) : '-';
+                return `<tr>
+                    <td>${r.receipt_no || '-'}</td>
+                    <td>${dateStr}</td>
+                    <td>${typeMap[r.receipt_type] || '-'}</td>
+                    <td style="color:#52c41a;font-weight:600;">$${parseFloat(r.amount || 0).toLocaleString('en-US',{minimumFractionDigits:2})}</td>
+                    <td>${r.account_name || (r.account_id ? 'Acct#'+r.account_id : '-')}</td>
+                    <td><span class="badge badge-${r.status == 2 ? 'success' : 'warning'}">${r.status == 2 ? 'Completed' : 'Pending'}</span></td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="6" style="text-align:center;color:#999">No receipts</td></tr>';
+
+            // Filter payments
+            const filteredPayments = financePaymentsData.filter(r => {
+                const matchQ = !q || (r.payment_no || '').toLowerCase().includes(q) || (r.account_name || '').toLowerCase().includes(q);
+                const matchT = !type || String(r.payment_type) === type;
+                const dateStr = r.payment_date ? new Date(r.payment_date).toISOString().substring(0, 10) : '';
+                const matchDF = !dateFrom || dateStr >= dateFrom;
+                const matchDT = !dateTo || dateStr <= dateTo;
+                const matchAmtF = !amtFrom || parseFloat(r.amount || 0) >= parseFloat(amtFrom);
+                const matchAmtT = !amtTo || parseFloat(r.amount || 0) <= parseFloat(amtTo);
+                const matchM = !method || (r.payment_method || '').toLowerCase().includes(method);
+                return matchQ && matchT && matchDF && matchDT && matchAmtF && matchAmtT && matchM;
+            });
+
+            document.getElementById('financePaymentsTable').innerHTML = filteredPayments.slice(0, 10).map(r => {
+                const typeMap = {1:'Purchase',2:'Advance',3:'Refund',9:'Other'};
+                const dateStr = r.payment_date ? new Date(r.payment_date).toLocaleDateString('en-US',{year:'numeric',month:'2-digit',day:'2-digit'}) : '-';
+                return `<tr>
+                    <td>${r.payment_no || '-'}</td>
+                    <td>${dateStr}</td>
+                    <td>${typeMap[r.payment_type] || '-'}</td>
+                    <td style="color:#ff4d4f;font-weight:600;">$${parseFloat(r.amount || 0).toLocaleString('en-US',{minimumFractionDigits:2})}</td>
+                    <td>${r.account_name || (r.account_id ? 'Acct#'+r.account_id : '-')}</td>
+                    <td><span class="badge badge-${r.status == 2 ? 'success' : 'warning'}">${r.status == 2 ? 'Completed' : 'Pending'}</span></td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="6" style="text-align:center;color:#999">No payments</td></tr>';
+        }
+
+        // ===== Employees =====
+        let employeesData = [];
+        async function renderEmployeesStats() {
+            const data = await api('/api/v1/employees');
+            const employees = data.data?.data || [];
+            employeesData = employees;
+
+            const total = data.meta?.total || employees.length;
+            const active = employees.filter(e => e.status == 1).length;
+            const depts = [...new Set(employees.map(e => e.department?.name).filter(Boolean))].length;
+            const roles = [...new Set(employees.map(e => e.role?.name).filter(Boolean))].length;
+
+            document.getElementById('employees-stats').innerHTML = `
+                <div class="module-stat-card blue">
+                    <div class="stat-label">Total Employees</div>
+                    <div class="stat-value">${total}</div>
+                </div>
+                <div class="module-stat-card green">
+                    <div class="stat-label">Active</div>
+                    <div class="stat-value">${active}</div>
+                </div>
+                <div class="module-stat-card teal">
+                    <div class="stat-label">Departments</div>
+                    <div class="stat-value">${depts}</div>
+                </div>
+                <div class="module-stat-card purple">
+                    <div class="stat-label">Roles</div>
+                    <div class="stat-value">${roles}</div>
+                </div>
+            `;
+
+            populateEmployeeFilters();
+            filterEmployees();
+        }
+
+        function populateEmployeeFilters() {
+            const depts = [...new Set((appData.employees || []).map(e => e.department_id + '|' + (e.department?.name || '')).filter(Boolean))].sort()
+                .map(x => { const [id, name] = x.split('|'); return { id, name }; });
+            const roles = [...new Set((appData.employees || []).map(e => e.role_id + '|' + (e.role?.name || '')).filter(Boolean))].sort()
+                .map(x => { const [id, name] = x.split('|'); return { id, name }; });
+            document.getElementById('emp-dept-filter').innerHTML = '<option value="">All Departments</option>' + depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+            document.getElementById('emp-role-filter').innerHTML = '<option value="">All Roles</option>' + roles.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+        }
+
+        function filterEmployees() {
+            const q = document.getElementById('employee-search').value.toLowerCase();
+            const email = document.getElementById('emp-email-filter').value.toLowerCase();
+            const dept = document.getElementById('emp-dept-filter').value;
+            const role = document.getElementById('emp-role-filter').value;
+            const position = document.getElementById('emp-position-filter').value.toLowerCase();
+            const status = document.getElementById('employee-status-filter').value;
+
+            const filtered = employeesData.filter(e => {
+                const matchQ = !q || (e.name || '').toLowerCase().includes(q) || (e.email || '').toLowerCase().includes(q) || (e.code || '').toLowerCase().includes(q);
+                const matchE = !email || (e.email || '').toLowerCase().includes(email);
+                const matchD = !dept || String(e.department_id) === dept;
+                const matchR = !role || String(e.role_id) === role;
+                const matchP = !position || (e.position || '').toLowerCase().includes(position);
+                const matchS = !status || String(e.status) === status;
+                return matchQ && matchE && matchD && matchR && matchP && matchS;
+            });
+
+            document.getElementById('allEmployeesTable').innerHTML = filtered.map(e => `
+                <tr>
+                    <td>${e.id}</td>
+                    <td>${e.code || '-'}</td>
+                    <td>${e.name || '-'}</td>
+                    <td>${e.email || '-'}</td>
+                    <td>${e.department?.name || '-'}</td>
+                    <td>${e.position || '-'}</td>
+                    <td>${e.role?.name || '-'}</td>
+                    <td><span class="badge badge-${e.status == 1 ? 'success' : 'danger'}">${e.status == 1 ? 'Active' : 'Inactive'}</span></td>
+                </tr>
+            `).join('') || '<tr><td colspan="8" style="text-align:center;color:#999">No employees</td></tr>';
+        }
+
         // ===== Dashboard recent items =====
         function renderDashboardTables() {
             // Recent products (first 10)
@@ -1178,6 +1776,9 @@
             if (m === 'suppliers') renderSuppliersStats();
             if (m === 'sales') renderSalesStats();
             if (m === 'purchase') renderPurchaseStats();
+            if (m === 'inventory') renderInventoryStats();
+            if (m === 'finance') renderFinanceStats();
+            if (m === 'employees') renderEmployeesStats();
         }
 
         // Patch render functions to call after loadAll
@@ -1190,5 +1791,6 @@
         checkAuth();
         loadAll();
     </script>
+    <script src="/js/notifications.js"></script>
 </body>
 </html>

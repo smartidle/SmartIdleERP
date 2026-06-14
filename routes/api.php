@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\ReturnController;
 use App\Http\Controllers\Api\ApprovalController;
+use App\Http\Controllers\Api\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -136,6 +137,15 @@ Route::prefix('v1')->group(function () {
         Route::get('approvals/delegates', [ApprovalController::class, 'delegates']);
         Route::post('approvals/delegates', [ApprovalController::class, 'createDelegate']);
         
+        // Notifications
+        Route::get('notifications', [NotificationController::class, 'index']);
+        Route::post('notifications', [NotificationController::class, 'store']);
+        Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::get('notifications/{notification}', [NotificationController::class, 'show']);
+        Route::post('notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
+        Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::delete('notifications/{notification}', [NotificationController::class, 'destroy']);
+
         // System Config
         Route::get('system-config', [SystemConfigController::class, 'index']);
         Route::get('system-config/group/{group}', [SystemConfigController::class, 'getByGroup']);

@@ -175,13 +175,13 @@ class FinanceController extends Controller
 
         // 本期收入
         $totalReceipt = FinanceReceipt::where('status', 2)
-            ->whereBetween('receipt_date', [$dateFrom, $dateTo])
-            ->sum('actual_amount');
+            ->whereBetween('payment_date', [$dateFrom, $dateTo])
+            ->sum('amount');
 
         // 本期支出
         $totalPayment = FinancePayment::where('status', 2)
             ->whereBetween('payment_date', [$dateFrom, $dateTo])
-            ->sum('actual_amount');
+            ->sum('amount');
 
         // 应收款
         $receivable = SalesOrder::whereIn('status', [2, 3, 4])
